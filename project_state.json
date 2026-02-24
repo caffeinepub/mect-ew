@@ -1,0 +1,340 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 12,
+  "summary": "MECT EW is a single-page web app deployed on the Internet Computer (Motoko canister backend + React frontend) for publishing categorized financial market analysis videos and collecting enquiries (contact/consultancy/mentoring). The site supports Internet Identity authentication, role-based admin controls, video upload (screen recording + manual upload), public video browsing by category, admin video management (search/filter, preview, download, delete, edit title, thumbnail management), and admin message management (view/filter, reply, delete). It also includes an admin-facing custom domain/DNS verification workflow with backend HTTP outcalls and frontend guidance UI.",
+  "architectural_notes": [
+    "ICP canister backend written in Motoko with modular mixins: blob-storage mixin (caffeine storage lifecycle/GC helpers) and authorization mixin (access control API).",
+    "Role-based access control implemented via an in-canister Map from Principal -> role (#admin/#user/#guest). Initialization is performed from the frontend by calling `_initializeAccessControlWithSecret`, using a secret token compared against an environment variable (`CAFFEINE_ADMIN_TOKEN`).",
+    "Backend state uses `mo:core/Map` collections for videos, thumbnails, messages, pending videos, and user profiles; upgrade migrations handled via `with migration = Migration.run`.",
+    "Frontend is a React SPA using TanStack Router for routing and TanStack React Query for data fetching/mutations and cache invalidation; UI is Tailwind + shadcn components + next-themes dark mode.",
+    "Frontend constructs an authenticated/anonymous canister actor via `createActorWithConfig` depending on Internet Identity state, and uses URL-hash secret extraction (`caffeineAdminToken`) persisted in sessionStorage.",
+    "Large file transfers use `ExternalBlob` (ICP SDK / backend binding) to upload bytes with progress callbacks, enabling upload progress, speed, and ETA tracking in the UI.",
+    "Admin UX is largely enforced at the backend (traps on unauthorized access) and mirrored in the frontend by gating admin tools/pages based on `isCallerAdmin`.",
+    "Custom domain verification includes backend HTTP outcalls (`ic:aaaaa-aa` http_request) with a transform function to strip headers.",
+    "Domain management UX extended to include an admin-accessible 'Force verification' action to re-trigger backend DNS verification checks when automatic verification stalls.",
+    "Video administration should differentiate public vs admin capabilities: public streaming only; admin-only download and management actions (rename, thumbnail upload)."
+  ],
+  "known_issues": [
+    "Anonymous visitors likely trigger an error in `useGetCallerUserProfile()`: the Layout always runs the query once an anonymous actor exists, but backend `getCallerUserProfile` traps unless caller has #user permission (guests/anonymous will fail). The query has `retry: false` but will still be in an error state for unauthenticated users unless additionally gated.",
+    "Frontend has nested `QueryClientProvider`s (one in `main.tsx`, another in `App.tsx`) with different clients; this is redundant and can cause confusion or inconsistent cache usage if any hooks run outside the inner provider.",
+    "`uploadThumbnail` backend method ignores the provided image format (always stores `#jpg`) and does not update the referenced video’s `thumbnailUrl`/`thumbnail` fields; therefore “auto-generated/manual URL thumbnails” uploaded via this method may not actually appear in galleries that rely on `getVideoThumbnailBlob` and/or `video.thumbnailUrl` linkage.",
+    "`ScreenRecorder.tsx` uses `declare const ExternalBlob: any;` rather than importing the generated `ExternalBlob` binding (unlike `ManualVideoUpload.tsx`), which can break if the global is not available in the build/runtime.",
+    "Domain management is partly placeholder/prototype: `DomainManagement.tsx` uses `canisterId = 'your-canister-id'` and client-side DNS checks via Google DNS; backend `retryVerification()` uses a hardcoded domain (`mectelliottwave.com`) and does not parse/validate the outcall response to actually confirm DNS ownership/verification.",
+    "Blob storage cashier principal env var name appears misspelled (`CAFFFEINE_STORAGE_CASHIER_PRINCIPAL` with triple 'F'); if not matched in deployment env it will trap.",
+    "Some components are placeholders/empty in the provided tree (e.g., `VideoManagement.tsx` explicitly says video management not available; several section components were provided empty), which may indicate incomplete or duplicated UI implementations.",
+    "`useDownloadVideo` always saves as `video/mp4` and `.mp4` filename even though recordings are typically `webm`; downloaded file type may not match source encoding.",
+    "Users reported intermittent admin recognition after Internet Identity login ('not authorized' after successful II), indicating unstable role/session recognition or admin bootstrap token flow issues.",
+    "Manual video upload previously failed with 'ExternalBlob is not defined', indicating a missing/incorrect import/binding in the manual upload path (regression risk)."
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "IF-1",
+      "title": "Internet Identity authentication context",
+      "synonyms": [
+        "II login",
+        "AuthClient integration"
+      ],
+      "description": "Provides an `InternetIdentityProvider` and `useInternetIdentity` hook to initialize an AuthClient, load persisted sessions, login via Internet Identity with long-lived delegation (30 days), and logout/clear identity state.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-2",
+      "title": "Canister actor creation and identity-aware refetching",
+      "synonyms": [
+        "useActor",
+        "actor factory"
+      ],
+      "description": "Creates an anonymous or authenticated backend actor depending on identity; authenticated actors attach the identity to the agent and call `_initializeAccessControlWithSecret` with a secret from the URL hash/session. On actor change, invalidates and refetches dependent React Query queries.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-3",
+      "title": "Role-based access control with admin bootstrap secret",
+      "synonyms": [
+        "AccessControl",
+        "admin token bootstrap"
+      ],
+      "description": "Motoko access control assigns roles (#admin/#user/#guest). The first non-anonymous principal to initialize with the correct secret token becomes admin; others become users. Includes APIs to get caller role, check admin status, and assign roles (admin-only).",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-4",
+      "title": "User profile storage and first-time profile setup modal",
+      "synonyms": [
+        "UserProfile",
+        "ProfileSetupModal"
+      ],
+      "description": "Backend stores per-principal user profiles. Frontend queries caller profile and shows a blocking modal to collect and save a name for authenticated users who have no profile yet.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-5",
+      "title": "Public pages and SPA navigation",
+      "synonyms": [
+        "TanStack Router routes",
+        "site sections"
+      ],
+      "description": "Implements routes for Home, About, Analysis, Consultancy, Mentoring, Contact, and Admin pages with a shared layout including header and footer.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-6",
+      "title": "Contact/consultancy/mentoring forms and message persistence",
+      "synonyms": [
+        "submitContactForm",
+        "FormType messages"
+      ],
+      "description": "Frontend contact form submits name/email/message with a form type. Backend stores messages with timestamp, status (#pending/#replied), optional reply text, and form type.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-7",
+      "title": "Admin message management (global and per-form)",
+      "synonyms": [
+        "MessageManagement",
+        "FormSpecificMessageManagement"
+      ],
+      "description": "Admin-only message listing from backend with filtering (form type/status), reply workflow (updates status to replied), and deletion with confirmation dialogs. Includes per-form management panels embedded on relevant pages.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-8",
+      "title": "Screen recording capture tool (admin-only UI)",
+      "synonyms": [
+        "ScreenRecorder",
+        "getDisplayMedia capture"
+      ],
+      "description": "Browser-based screen recorder with Full HD/60fps settings, optional microphone and system audio, recording duration display, local download of recorded blob, and upload to backend with progress, speed, ETA, and automatic retry on network errors.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-9",
+      "title": "Manual video upload (admin-only UI)",
+      "synonyms": [
+        "uploadManualVideo",
+        "external file upload"
+      ],
+      "description": "Manual upload of external video files (MP4/MOV/AVI/WebM) up to 2GB with validation, preview, category selection, file type selection, progress/speed/ETA metrics, and retry handling. Uses `ExternalBlob` byte upload with progress callbacks.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-10",
+      "title": "Video metadata storage and categorization",
+      "synonyms": [
+        "VideoMeta",
+        "VideoCategory"
+      ],
+      "description": "Backend stores videos with id/title/timestamp/filesize/blob/category/source type (recorded/uploaded) and optional thumbnail fields. Supports public queries for all videos and by category.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-11",
+      "title": "Public video gallery with on-demand streaming and thumbnail caching",
+      "synonyms": [
+        "VideoGallery",
+        "streamVideo"
+      ],
+      "description": "Displays public videos in a responsive grid per category, opens a dialog to stream/play video by fetching the blob on demand, and caches thumbnail direct URLs per video when available.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-12",
+      "title": "Admin video management panel",
+      "synonyms": [
+        "VideoManagementPanel",
+        "adminVideos"
+      ],
+      "description": "Admin-only management UI to list full video metadata, search and filter by category, preview videos, download, delete, and inline edit video titles. Uses React Query mutations with cache invalidation.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-13",
+      "title": "Thumbnail management (custom upload, auto generation trigger, revert)",
+      "synonyms": [
+        "uploadCustomThumbnail",
+        "revertToAutoThumbnail"
+      ],
+      "description": "Supports uploading custom thumbnail blobs (JPG/PNG/WebP, <=5MB) and attaching them to videos; frontend also provides an auto-thumbnail generation flow by grabbing a frame from the video and calling thumbnail upload APIs; includes ability to revert to auto/default thumbnail state.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-14",
+      "title": "Admin-only secure blob download endpoint and client download flow",
+      "synonyms": [
+        "downloadBlob",
+        "video download"
+      ],
+      "description": "Backend exposes an admin-gated `downloadBlob` (and video blob download) method. Frontend retrieves bytes and triggers a browser download for admin-managed videos.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-15",
+      "title": "Bulk/pending video operations on backend",
+      "synonyms": [
+        "bulkDeleteVideos",
+        "bulkMoveVideosToCategory",
+        "pendingVideos"
+      ],
+      "description": "Backend includes APIs to move videos across categories, bulk delete, bulk move, and publish pending videos to the main catalog, plus queries to list pending videos (admin-only).",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-16",
+      "title": "Custom domain verification tooling (admin)",
+      "synonyms": [
+        "DomainManagement",
+        "retryVerification",
+        "http outcalls"
+      ],
+      "description": "Frontend provides DNS setup instructions (GoDaddy) and verification actions. Backend provides `getCustomDomainStatus` (admin-only) and `retryVerification` which performs an HTTP outcall to a DNS resolver and updates last-attempt/status fields.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-17",
+      "title": "Blob-storage maintenance mixin for Caffeine storage gateway",
+      "synonyms": [
+        "caffeine storage mixin",
+        "dead blob GC helpers"
+      ],
+      "description": "Includes canister methods for storage gateway principal authorization updates, listing dead blobs for deletion, confirming pruning, forcing GC, and cashier cycle refill/top-up behavior.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-18",
+      "title": "Camera utility hook",
+      "synonyms": [
+        "useCamera",
+        "photo capture"
+      ],
+      "description": "Provides a reusable `useCamera` hook for starting/stopping camera streams, switching cameras, capturing photos to files, and handling permission/support errors (even if not currently wired into main UI).",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-analysis-admin-upload-uis-so-the-video-title-field-is-optional-not-required-for-both-screen-recordings-and-manual-uploads",
+      "title": "Update the Analysis admin upload UIs so the video title field is optional (not required) for both screen recordings and manual uploads.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-analysis-admin-upload-uis-so-a-video-can-be-published-with-an-empty-whitespace-title-without-any-client-side-validation-blocking-the-upload-for-both-screen-recordings-and-manual-uploads",
+      "title": "Update the Analysis admin upload UIs so a video can be published with an empty/whitespace title, without any client-side validation blocking the upload, for both screen recordings and manual uploads.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-or-adjust-any-auto-fill-behavior-that-prevents-users-from-intentionally-leaving-the-title-blank-during-manual-uploads-e-g-auto-populating-the-title-from-the-filename-should-not-occur-if-the-user-wants-an-empty-title",
+      "title": "Remove or adjust any auto-fill behavior that prevents users from intentionally leaving the title blank during manual uploads (e.g., auto-populating the title from the filename should not occur if the user wants an empty title).",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-user-facing-helper-label-text-for-the-title-field-is-in-english-and-clearly-indicates-that-the-title-is-optional-and-that-an-automatic-title-will-be-generated-if-left-blank",
+      "title": "Ensure user-facing helper/label text for the title field is in English and clearly indicates that the title is optional and that an automatic title will be generated if left blank.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-after-a-screen-recording-is-completed-in-the-screenrecorder-component-display-an-in-app-video-preview-player-so-the-admin-can-review-the-recorded-video-directly-within-the-app-before-deciding-to-upload-or-download-it-the-preview-should-use-the-recorded-blob-mediastream-data-already-available-in-memory-no-upload-required-to-preview-the-existing-download-button-must-remain-visible-alongside-the-new-preview-player",
+      "title": "After a screen recording is completed in the ScreenRecorder component, display an in-app video preview player so the admin can review the recorded video directly within the app before deciding to upload or download it. The preview should use the recorded Blob/MediaStream data already available in memory (no upload required to preview). The existing download button must remain visible alongside the new preview player.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Enable manual upload of external videos for Analysis section (in addition to in-app screen recording), with reliable format/size support",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Add admin-only ability to edit uploaded video titles (rename videos) in Analysis management",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Add per-video thumbnail support like YouTube: auto-generate thumbnail and allow manual thumbnail image upload/replacement",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Hide video file size (MB) from public visitors; keep technical details visible to admin only",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Add admin-only download controls for Analysis videos (public can only stream/view in-app)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Allow admin to download the recorded video immediately after recording (pre-upload) to support later manual upload",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Add/restore admin panel tooling to force custom-domain verification (manual re-check) when automatic verification stalls",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Make video title optional (not required) when uploading videos in the Analysis section",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Ensure the backend accepts uploads with an empty/whitespace title by generating a default non-empty title server-side for both recorded uploads and manual uploads.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "After finishing a screen recording, allow the admin to preview/review the recorded video directly within the app (in addition to the existing download option)",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "MECT EW",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

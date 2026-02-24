@@ -1,0 +1,44 @@
+{
+  "kind": "build_request",
+  "title": "Preview recorded video in-app after screen recording finishes",
+  "projectName": "MECT EW",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-6",
+      "text": "After a screen recording is completed in the ScreenRecorder component, display an in-app video preview player so the admin can review the recorded video directly within the app before deciding to upload or download it. The preview should use the recorded Blob/MediaStream data already available in memory (no upload required to preview). The existing download button must remain visible alongside the new preview player.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-8"
+        ],
+        "quotes": [
+          "cuando termino de grabar un video de analisis, me da la posibilidad de descargarlo pero no de poder revisarlo directamente desde la app"
+        ]
+      },
+      "acceptanceCriteria": [
+        "After stopping a screen recording, a video preview player appears in the ScreenRecorder UI showing the just-recorded video using a local object URL derived from the recorded Blob.",
+        "The admin can play, pause, and scrub through the recorded video without uploading it to the backend.",
+        "The existing download button remains accessible alongside the preview player.",
+        "The preview player is clearly labelled (e.g., 'Recording Preview') so the admin understands they are reviewing the local recording before upload.",
+        "The preview player is dismissed/cleared when the admin proceeds to upload the video or starts a new recording.",
+        "No backend changes are required; the preview uses only in-memory/local object URL data."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not remove or hide the existing download button that appears after recording stops.",
+    "The preview must use a local object URL (URL.createObjectURL) from the recorded Blob — do not upload to backend just to preview.",
+    "Do not modify any file under frontend/src/hooks/ immutable paths."
+  ],
+  "nonGoals": [
+    "Saving or persisting the preview state to the backend.",
+    "Adding preview functionality to the public video gallery or VideoManagementPanel.",
+    "Changing the upload flow or upload form fields.",
+    "Adding preview for manually uploaded videos (only screen recording post-capture preview is in scope)."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}
