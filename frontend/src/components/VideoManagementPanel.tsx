@@ -331,12 +331,8 @@ export default function VideoManagementPanel() {
     setEditingTitle('');
   };
 
+  // Title is optional: empty string is allowed and the backend will auto-generate a default title.
   const saveEditedTitle = async (videoId: string) => {
-    if (!editingTitle.trim()) {
-      toast.error('El título no puede estar vacío');
-      return;
-    }
-
     try {
       await updateVideoTitleMutation.mutateAsync({
         videoId,
@@ -456,117 +452,134 @@ export default function VideoManagementPanel() {
                       <div className="flex-1 min-w-0 space-y-1">
                         <div className="flex items-center gap-2">
                           {isEditing ? (
-                            <div className="flex items-center gap-2 flex-1">
-                              <Input
-                                value={editingTitle}
-                                onChange={(e) => setEditingTitle(e.target.value)}
-                                className="flex-1"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    saveEditedTitle(video.id);
-                                  } else if (e.key === 'Escape') {
-                                    cancelEditingTitle();
-                                  }
-                                }}
-                              />
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => saveEditedTitle(video.id)}
-                                disabled={updateVideoTitleMutation.isPending}
-                              >
-                                {updateVideoTitleMutation.isPending ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Check className="w-4 h-4" />
-                                )}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={cancelEditingTitle}
-                                disabled={updateVideoTitleMutation.isPending}
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
+                            <div className="flex flex-col gap-1 flex-1">
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  value={editingTitle}
+                                  onChange={(e) => setEditingTitle(e.target.value)}
+                                  placeholder="Dejar vacío para título automático"
+                                  className="flex-1"
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      saveEditedTitle(video.id);
+                                    } else if (e.key === 'Escape') {
+                                      cancelEditingTitle();
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => saveEditedTitle(video.id)}
+                                  disabled={updateVideoTitleMutation.isPending}
+                                >
+                                  {updateVideoTitleMutation.isPending ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Check className="w-4 h-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={cancelEditingTitle}
+                                  disabled={updateVideoTitleMutation.isPending}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              <p className="text-xs text-muted-foreground pl-1">
+                                Opcional – dejar vacío para generar un título automático.
+                              </p>
                             </div>
                           ) : (
                             <>
-                              <h3 className="font-semibold truncate">{video.title}</h3>
+                              <p className="font-medium text-sm truncate">{video.title}</p>
                               <Button
                                 size="sm"
                                 variant="ghost"
+                                className="flex-shrink-0 h-6 w-6 p-0"
                                 onClick={() => startEditingTitle(video)}
-                                className="shrink-0"
                               >
-                                <Edit2 className="w-4 h-4" />
+                                <Edit2 className="w-3.5 h-3.5" />
                               </Button>
                             </>
                           )}
-                          <Badge variant={video.sourceType === Variant_recorded_uploaded.recorded ? 'default' : 'secondary'} className="shrink-0">
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {getCategoryLabel(video.category)}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
                             {getSourceTypeLabel(video.sourceType)}
                           </Badge>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                          <span className="inline-flex items-center gap-1">
-                            <span className="font-medium text-foreground">{getCategoryLabel(video.category)}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(video.timestamp)}
                           </span>
-                          <span>•</span>
-                          <span>{formatDate(video.timestamp)}</span>
-                          <span>•</span>
-                          <span>{formatFileSize(video.fileSize)}</span>
-                          <span>•</span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatFileSize(video.fileSize)}
+                          </span>
                           <VideoViewCount videoId={video.id} isAdmin={isAdmin} />
                         </div>
                       </div>
-                      
-                      <div className="flex items-center gap-2 ml-4">
+
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         <Button
-                          variant="outline"
                           size="sm"
-                          onClick={() => handleThumbnailUpload(video)}
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setSelectedVideo(video)}
+                          title="Ver video"
                         >
-                          <ImageIcon className="w-4 h-4 mr-2" />
-                          Miniatura
+                          <Play className="w-4 h-4" />
                         </Button>
-                        {isCustom && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleDownload(video)}
+                          disabled={downloadVideoMutation.isPending}
+                          title="Descargar video"
+                        >
+                          {downloadVideoMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleThumbnailUpload(video)}
+                          title="Gestionar miniatura"
+                        >
+                          <ImageIcon className="w-4 h-4" />
+                        </Button>
+                        {hasCustomThumbnail(video) && (
                           <Button
-                            variant="outline"
                             size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
                             onClick={() => handleRevertToAutoThumbnail(video)}
                             disabled={revertToAutoThumbnailMutation.isPending}
                             title="Revertir a miniatura automática"
                           >
-                            <RotateCcw className="w-4 h-4" />
+                            {revertToAutoThumbnailMutation.isPending ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <RotateCcw className="w-4 h-4" />
+                            )}
                           </Button>
                         )}
                         <Button
-                          variant="outline"
                           size="sm"
-                          onClick={() => setSelectedVideo(video)}
-                        >
-                          <Play className="w-4 h-4 mr-2" />
-                          Revisar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownload(video)}
-                          disabled={downloadVideoMutation.isPending}
-                        >
-                          {downloadVideoMutation.isPending ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          ) : (
-                            <Download className="w-4 h-4 mr-2" />
-                          )}
-                          Descargar
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                           onClick={() => handleDelete(video)}
-                          disabled={deleteVideoMutation.isPending}
+                          title="Eliminar video"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -580,178 +593,149 @@ export default function VideoManagementPanel() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
+      {/* Video Preview Dialog */}
+      <Dialog open={!!selectedVideo} onOpenChange={(open) => !open && setSelectedVideo(null)}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedVideo?.title}
-              {selectedVideo && (
-                <Badge variant={selectedVideo.sourceType === Variant_recorded_uploaded.recorded ? 'default' : 'secondary'}>
-                  {getSourceTypeLabel(selectedVideo.sourceType)}
-                </Badge>
-              )}
-            </DialogTitle>
+            <DialogTitle>{selectedVideo?.title}</DialogTitle>
             <DialogDescription>
               {selectedVideo && (
-                <div className="flex items-center gap-4 text-sm mt-2">
-                  <span className="font-medium">{getCategoryLabel(selectedVideo.category)}</span>
-                  <span>•</span>
-                  <span>{formatDate(selectedVideo.timestamp)}</span>
-                  <span>•</span>
-                  <span>{formatFileSize(selectedVideo.fileSize)}</span>
-                  <span>•</span>
-                  <VideoViewCount videoId={selectedVideo.id} isAdmin={isAdmin} />
-                </div>
+                <span>
+                  {getCategoryLabel(selectedVideo.category)} · {formatDate(selectedVideo.timestamp)} · {formatFileSize(selectedVideo.fileSize)}
+                </span>
               )}
             </DialogDescription>
           </DialogHeader>
           {selectedVideo && (
-            <div className="space-y-4">
-              <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                <video
-                  src={selectedVideo.blob.getDirectURL()}
-                  controls
-                  autoPlay
-                  className="w-full h-full"
-                />
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => handleDownload(selectedVideo)}
-                  disabled={downloadVideoMutation.isPending}
-                >
-                  {downloadVideoMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Descargando...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4 mr-2" />
-                      Descargar video
-                    </>
-                  )}
-                </Button>
-              </div>
+            <div className="aspect-video bg-black rounded overflow-hidden">
+              <video
+                src={selectedVideo.blob.getDirectURL()}
+                controls
+                className="w-full h-full"
+                autoPlay={false}
+              />
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showThumbnailDialog} onOpenChange={setShowThumbnailDialog}>
-        <DialogContent className="max-w-2xl">
+      {/* Thumbnail Management Dialog */}
+      <Dialog open={showThumbnailDialog} onOpenChange={(open) => {
+        if (!open) {
+          setShowThumbnailDialog(false);
+          setVideoForThumbnail(null);
+          setThumbnailFile(null);
+          setThumbnailPreview(null);
+        }
+      }}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Gestionar Miniatura</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <ImageIcon className="w-5 h-5" />
+              Gestionar Miniatura
+            </DialogTitle>
             <DialogDescription>
-              Genere automáticamente una miniatura desde el primer fotograma del video o suba una imagen personalizada (JPG, PNG, WebP)
+              {videoForThumbnail?.title}
             </DialogDescription>
           </DialogHeader>
+          
           <div className="space-y-4">
-            {!thumbnailFile ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div
-                    className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 hover:border-primary/50 transition-colors cursor-pointer"
-                    onClick={() => videoForThumbnail && generateThumbnailFromVideo(videoForThumbnail)}
-                  >
-                    <VideoIcon className="w-10 h-10 text-muted-foreground mb-3" />
-                    <p className="text-sm font-medium mb-1 text-center">Generar Automáticamente</p>
-                    <p className="text-xs text-muted-foreground text-center">Desde el primer fotograma</p>
-                    {isGeneratingThumbnail && (
-                      <Loader2 className="w-6 h-6 text-primary mt-3 animate-spin" />
-                    )}
-                  </div>
-                  
-                  <div
-                    className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 hover:border-primary/50 transition-colors cursor-pointer"
-                    onClick={() => thumbnailInputRef.current?.click()}
-                  >
-                    <ImageIcon className="w-10 h-10 text-muted-foreground mb-3" />
-                    <p className="text-sm font-medium mb-1 text-center">Subir Miniatura Personalizada</p>
-                    <p className="text-xs text-muted-foreground text-center">JPG, PNG, WebP (máx. 5MB)</p>
-                    <input
-                      ref={thumbnailInputRef}
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp"
-                      onChange={handleThumbnailFileSelect}
-                      className="hidden"
-                    />
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="space-y-4">
-                <div className="aspect-video bg-black rounded-lg overflow-hidden border border-border">
-                  {thumbnailPreview && (
-                    <img
-                      src={thumbnailPreview}
-                      alt="Vista previa de miniatura"
-                      className="w-full h-full object-contain"
-                    />
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleUploadCustomThumbnail}
-                    disabled={isUploadingThumbnail}
-                    className="flex-1"
-                  >
-                    {isUploadingThumbnail ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Subiendo...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Subir Miniatura Personalizada
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setThumbnailFile(null);
-                      setThumbnailPreview(null);
-                    }}
-                    variant="outline"
-                    disabled={isUploadingThumbnail}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
+            {thumbnailPreview && (
+              <div className="aspect-video bg-muted rounded overflow-hidden">
+                <img
+                  src={thumbnailPreview}
+                  alt="Vista previa de miniatura"
+                  className="w-full h-full object-cover"
+                />
               </div>
             )}
+
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Subir miniatura personalizada</p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => thumbnailInputRef.current?.click()}
+                  className="flex-1"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Seleccionar imagen
+                </Button>
+                {thumbnailFile && (
+                  <Button
+                    size="sm"
+                    onClick={handleUploadCustomThumbnail}
+                    disabled={isUploadingThumbnail}
+                  >
+                    {isUploadingThumbnail ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Check className="w-4 h-4 mr-2" />
+                    )}
+                    Subir
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Formatos: JPG, PNG, WebP · Máximo: 5MB
+              </p>
+              <input
+                ref={thumbnailInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={handleThumbnailFileSelect}
+                className="hidden"
+              />
+            </div>
+
+            <div className="border-t border-border pt-4 space-y-2">
+              <p className="text-sm font-medium">Generar desde el video</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => videoForThumbnail && generateThumbnailFromVideo(videoForThumbnail)}
+                disabled={isGeneratingThumbnail}
+                className="w-full"
+              >
+                {isGeneratingThumbnail ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <VideoIcon className="w-4 h-4 mr-2" />
+                )}
+                Generar miniatura automáticamente
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Eliminación</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar video?</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Está seguro de que desea eliminar el video "{videoToDelete?.title}"?
-              Esta acción no se puede deshacer y el video será eliminado permanentemente.
+              Esta acción no se puede deshacer. El video "{videoToDelete?.title}" será eliminado permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteVideoMutation.isPending}>
+            <AlertDialogCancel onClick={() => {
+              setShowDeleteDialog(false);
+              setVideoToDelete(null);
+            }}>
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              disabled={deleteVideoMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleteVideoMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Eliminando...
-                </>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (
-                'Eliminar'
+                <Trash2 className="w-4 h-4 mr-2" />
               )}
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

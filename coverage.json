@@ -1,35 +1,42 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T18:33:18.032Z",
+  "generatedAt": "2026-02-25T13:46:57.206Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
+    "total": 2,
     "implemented": 1,
     "items": [
       {
-        "id": "REQ-6",
-        "summary": "After a screen recording is completed in the ScreenRecorder component, display an in-app video preview player so the admin can review the recorded video directly within the app before deciding to upload or download it. The preview should use the recorded Blob/MediaStream data already available in memory (no upload required to preview). The existing download button must remain visible alongside the new preview player.",
+        "id": "REQ-7",
+        "summary": "Update the backend `updateVideoTitle` (or equivalent) function so it accepts an empty or whitespace-only string as a valid title for an already-uploaded video. If the provided title is empty or whitespace, the backend should store a server-generated default title (e.g., based on upload date/time) rather than rejecting the request or trapping.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-8",
+        "summary": "In the admin Video Management Panel (`VideoManagementPanel.tsx`), update the inline title-editing UI so the title field is optional. Remove any client-side validation that prevents saving an empty or whitespace title. The helper text next to the title input must indicate in English that the title is optional and that a default title will be generated automatically if left blank.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/ScreenRecorder.tsx"
+          "frontend/src/components/VideoManagementPanel.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/ScreenRecorder.tsx"
+          "frontend/src/components/VideoManagementPanel.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/ScreenRecorder.tsx",
+    "frontend/src/components/VideoManagementPanel.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

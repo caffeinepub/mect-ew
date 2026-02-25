@@ -1,41 +1,55 @@
 {
   "kind": "build_request",
-  "title": "Preview recorded video in-app after screen recording finishes",
+  "title": "Allow editing already-uploaded Analysis video titles to be blank/empty",
   "projectName": "MECT EW",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-6",
-      "text": "After a screen recording is completed in the ScreenRecorder component, display an in-app video preview player so the admin can review the recorded video directly within the app before deciding to upload or download it. The preview should use the recorded Blob/MediaStream data already available in memory (no upload required to preview). The existing download button must remain visible alongside the new preview player.",
-      "target": "frontend",
+      "id": "REQ-7",
+      "text": "Update the backend `updateVideoTitle` (or equivalent) function so it accepts an empty or whitespace-only string as a valid title for an already-uploaded video. If the provided title is empty or whitespace, the backend should store a server-generated default title (e.g., based on upload date/time) rather than rejecting the request or trapping.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-8"
+          "msg-9"
         ],
         "quotes": [
-          "cuando termino de grabar un video de analisis, me da la posibilidad de descargarlo pero no de poder revisarlo directamente desde la app"
+          "necesito que el titulo de los videos de la seccion analisis que ya estan subidos, tambien tengan la posibilidad de que su titulo sea opcional"
         ]
       },
       "acceptanceCriteria": [
-        "After stopping a screen recording, a video preview player appears in the ScreenRecorder UI showing the just-recorded video using a local object URL derived from the recorded Blob.",
-        "The admin can play, pause, and scrub through the recorded video without uploading it to the backend.",
-        "The existing download button remains accessible alongside the preview player.",
-        "The preview player is clearly labelled (e.g., 'Recording Preview') so the admin understands they are reviewing the local recording before upload.",
-        "The preview player is dismissed/cleared when the admin proceeds to upload the video or starts a new recording.",
-        "No backend changes are required; the preview uses only in-memory/local object URL data."
+        "Calling the update-title backend function with an empty string does not return an error or trap.",
+        "If the submitted title is empty or whitespace, the stored title is replaced with a non-empty auto-generated default (e.g., 'Video – <date>').",
+        "If a non-empty title is provided, it is stored as-is (existing behaviour preserved)."
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "In the admin Video Management Panel (`VideoManagementPanel.tsx`), update the inline title-editing UI so the title field is optional. Remove any client-side validation that prevents saving an empty or whitespace title. The helper text next to the title input must indicate in English that the title is optional and that a default title will be generated automatically if left blank.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-9"
+        ],
+        "quotes": [
+          "necesito que el titulo de los videos de la seccion analisis que ya estan subidos, tambien tengan la posibilidad de que su titulo sea opcional"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The title input field in the video management panel does not show a validation error when left empty.",
+        "Submitting an empty title does not block the save action.",
+        "A helper label near the title field reads something like: 'Optional – leave blank to auto-generate a title.'",
+        "After saving an empty title, the video row reflects the auto-generated title returned from the backend."
       ]
     }
   ],
   "constraints": [
-    "Do not remove or hide the existing download button that appears after recording stops.",
-    "The preview must use a local object URL (URL.createObjectURL) from the recorded Blob — do not upload to backend just to preview.",
-    "Do not modify any file under frontend/src/hooks/ immutable paths."
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
+    "All Motoko logic must remain in backend/main.mo (single-actor architecture)."
   ],
   "nonGoals": [
-    "Saving or persisting the preview state to the backend.",
-    "Adding preview functionality to the public video gallery or VideoManagementPanel.",
-    "Changing the upload flow or upload form fields.",
-    "Adding preview for manually uploaded videos (only screen recording post-capture preview is in scope)."
+    "Changing the upload flow for new videos (already handled by existing features).",
+    "Modifying the public video gallery display logic.",
+    "Altering thumbnail management behaviour."
   ],
   "imageRequirements": {
     "required": [],

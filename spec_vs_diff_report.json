@@ -1,14 +1,24 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T18:33:18.029Z",
-  "summary": "The diff modifies ScreenRecorder.tsx to add an in-app video preview player after screen recording stops. The implementation uses URL.createObjectURL from the recorded Blob, includes a previewUrl state, clearPreviewUrl helper, and proper object URL cleanup on unmount. The file summary confirms the preview player is present with controls, is labelled, and is cleared on upload/discard/new recording. All REQ-6 acceptance criteria appear to be addressed.",
-  "missing_requirements": [],
+  "generatedAt": "2026-02-25T13:46:57.202Z",
+  "summary": "Both REQ-7 (backend) and REQ-8 (frontend) appear to be at least partially implemented. The backend main.mo was modified and includes a `defaultTitleCounter` variable suggesting auto-title generation logic. The frontend VideoManagementPanel.tsx was modified. The useQueries.ts summary mentions 'video upload mutations now pass trimmed titles as-is without client-side validation to allow empty titles for backend auto-generation.' However, due to truncation of both backend/main.mo and VideoManagementPanel.tsx, it is not possible to fully verify all acceptance criteria, particularly: the helper label text in the UI, the exact auto-generation logic in the backend, and whether the video row reflects the auto-generated title after saving.",
+  "missing_requirements": [
+    {
+      "id": "REQ-8",
+      "requirement": "A helper label near the title field reads something like: 'Optional – leave blank to auto-generate a title.'",
+      "reason": "The VideoManagementPanel.tsx diff is truncated before the title editing UI section is shown, so the presence of the required helper label text cannot be confirmed from the available evidence.",
+      "evidence": [
+        "frontend/src/components/VideoManagementPanel.tsx"
+      ]
+    }
+  ],
   "hallucinated_features": [],
-  "confidence": 0.82,
+  "confidence": 0.55,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/ScreenRecorder.tsx",
+    "frontend/src/components/VideoManagementPanel.tsx",
     "project_state.json"
   ]
 }

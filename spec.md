@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** After a screen recording finishes in the ScreenRecorder component, show an in-app video preview player so the admin can review the recording locally before uploading or downloading it.
+**Goal:** Allow video titles in the Analysis section to be optional when editing already-uploaded videos, storing an auto-generated default title if left blank.
 
 **Planned changes:**
-- After recording stops, generate a local object URL from the recorded Blob and display a `<video>` preview player in the ScreenRecorder UI labeled "Recording Preview".
-- The preview player supports play, pause, and scrubbing without any backend interaction.
-- The existing download button remains visible alongside the new preview player.
-- The preview player is cleared when the admin starts a new recording or proceeds to upload.
+- Update the backend `updateVideoTitle` function to accept empty or whitespace-only strings without error, storing an auto-generated default title (e.g., based on date/time) when the provided title is blank.
+- Remove client-side validation in `VideoManagementPanel.tsx` that blocks saving an empty title.
+- Add helper text near the title input field indicating the title is optional and a default will be auto-generated if left blank.
+- After saving an empty title, the video row updates to reflect the auto-generated title returned from the backend.
 
-**User-visible outcome:** After stopping a screen recording, the admin sees an in-app video preview they can play and review directly, while still having access to the download button.
+**User-visible outcome:** Admins can clear a video's title in the Video Management Panel and save it without errors; the video will automatically display a generated default title instead.

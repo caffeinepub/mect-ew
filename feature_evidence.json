@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-after-a-screen-recording-is-completed-in-the-screenrecorder-component-display-an-in-app-video-preview-player-so-the-admin-can-review-the-recorded-video-directly-within-the-app-before-deciding-to-upload-or-download-it-the-preview-should-use-the-recorded-blob-mediastream-data-already-available-in-memory-no-upload-required-to-preview-the-existing-download-button-must-remain-visible-alongside-the-new-preview-player",
-      "featureTitle": "After a screen recording is completed in the ScreenRecorder component, display an in-app video preview player so the admin can review the recorded video directly within the app before deciding to upload or download it. The preview should use the recorded Blob/MediaStream data already available in memory (no upload required to preview). The existing download button must remain visible alongside the new preview player.",
+      "featureId": "feature-in-the-admin-video-management-panel-videomanagementpanel-tsx-update-the-inline-title-editing-ui-so-the-title-field-is-optional-remove-any-client-side-validation-that-prevents-saving-an-empty-or-whitespace-title-the-helper-text-next-to-the-title-input-must-indicate-in-english-that-the-title-is-optional-and-that-a-default-title-will-be-generated-automatically-if-left-blank",
+      "featureTitle": "In the admin Video Management Panel (`VideoManagementPanel.tsx`), update the inline title-editing UI so the title field is optional. Remove any client-side validation that prevents saving an empty or whitespace title. The helper text next to the title input must indicate in English that the title is optional and that a default title will be generated automatically if left blank.",
       "files": [
-        "frontend/src/components/ScreenRecorder.tsx"
+        "frontend/src/components/VideoManagementPanel.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -19,7 +19,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-6"
+        "REQ-8"
       ],
       "confidence": "high"
     }

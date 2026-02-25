@@ -11,6 +11,8 @@ import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import OutCall "http-outcalls/outcall";
 
+// No data migration needed as we only modify behavior - not persistent state.
+
 actor {
   include MixinStorage();
 
@@ -815,6 +817,7 @@ actor {
     blob;
   };
 
+  // UPDATED: implementation - supports empty or whitespace title (stores default title)
   public shared ({ caller }) func updateVideoTitle(videoId : Text, newTitle : Text) : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Acceso no autorizado: Solo administradores pueden editar títulos de video");
@@ -823,9 +826,14 @@ actor {
     switch (videos.get(videoId)) {
       case (null) { Runtime.trap("Video no encontrado") };
       case (?video) {
+        let updatedTitle = if (isNullOrWhitespace(newTitle)) {
+          generateDefaultTitle();
+        } else {
+          newTitle;
+        };
         let updatedVideo : VideoMeta = {
           id = video.id;
-          title = newTitle;
+          title = updatedTitle;
           timestamp = video.timestamp;
           fileSize = video.fileSize;
           blob = video.blob;

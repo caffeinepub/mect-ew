@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 12,
+  "projectStateVersion": 14,
   "summary": "MECT EW is a single-page web app deployed on the Internet Computer (Motoko canister backend + React frontend) for publishing categorized financial market analysis videos and collecting enquiries (contact/consultancy/mentoring). The site supports Internet Identity authentication, role-based admin controls, video upload (screen recording + manual upload), public video browsing by category, admin video management (search/filter, preview, download, delete, edit title, thumbnail management), and admin message management (view/filter, reply, delete). It also includes an admin-facing custom domain/DNS verification workflow with backend HTTP outcalls and frontend guidance UI.",
   "architectural_notes": [
     "ICP canister backend written in Motoko with modular mixins: blob-storage mixin (caffeine storage lifecycle/GC helpers) and authorization mixin (access control API).",
@@ -267,6 +267,14 @@
         "REQ-6"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-in-the-admin-video-management-panel-videomanagementpanel-tsx-update-the-inline-title-editing-ui-so-the-title-field-is-optional-remove-any-client-side-validation-that-prevents-saving-an-empty-or-whitespace-title-the-helper-text-next-to-the-title-input-must-indicate-in-english-that-the-title-is-optional-and-that-a-default-title-will-be-generated-automatically-if-left-blank",
+      "title": "In the admin Video Management Panel (`VideoManagementPanel.tsx`), update the inline title-editing UI so the title field is optional. Remove any client-side validation that prevents saving an empty or whitespace title. The helper text next to the title input must indicate in English that the title is optional and that a default title will be generated automatically if left blank.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -330,6 +338,20 @@
       "id": "AR-11",
       "summary": "After finishing a screen recording, allow the admin to preview/review the recorded video directly within the app (in addition to the existing download option)",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Allow admin to clear/make optional the title of already-uploaded Analysis videos (edit existing video titles to be blank/empty, not just during upload)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Update the backend `updateVideoTitle` (or equivalent) function so it accepts an empty or whitespace-only string as a valid title for an already-uploaded video. If the provided title is empty or whitespace, the backend should store a server-generated default title (e.g., based on upload date/time) rather than rejecting the request or trapping.",
+      "reqIds": [
+        "REQ-7"
+      ],
       "status": "pending"
     }
   ],

@@ -1,24 +1,22 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add in-app video preview to ScreenRecorder after recording completes",
+  "title": "Allow editing already-uploaded Analysis video titles to be blank/empty",
   "requirements": [
     {
-      "id": "REQ-6",
-      "summary": "Display an in-app video preview player in the ScreenRecorder component after recording completes, allowing the admin to review the recorded video using the in-memory Blob before deciding to upload or download it. The existing download button must remain accessible alongside the preview player.",
+      "id": "REQ-8",
+      "summary": "Update the admin Video Management Panel to make the title field optional, remove client-side validation that prevents saving empty titles, and add helper text indicating that leaving the title blank will auto-generate a default title.",
       "acceptanceCriteria": [
-        "After stopping a screen recording, a video preview player appears in the ScreenRecorder UI showing the just-recorded video using a local object URL derived from the recorded Blob.",
-        "The admin can play, pause, and scrub through the recorded video without uploading it to the backend.",
-        "The existing download button remains accessible alongside the preview player.",
-        "The preview player is clearly labelled (e.g., 'Recording Preview') so the admin understands they are reviewing the local recording before upload.",
-        "The preview player is dismissed/cleared when the admin proceeds to upload the video or starts a new recording.",
-        "No backend changes are required; the preview uses only in-memory/local object URL data."
+        "The title input field in the video management panel does not show a validation error when left empty.",
+        "Submitting an empty title does not block the save action.",
+        "A helper label near the title field reads something like: 'Optional – leave blank to auto-generate a title.'",
+        "After saving an empty title, the video row reflects the auto-generated title returned from the backend."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/ScreenRecorder.tsx",
+          "path": "frontend/src/components/VideoManagementPanel.tsx",
           "operation": "modify",
-          "description": "Add state for storing the recorded video Blob URL (using URL.createObjectURL). After recording stops and recordedChunks is available, create an object URL from the Blob and store it in state. Render a video preview player (HTML5 <video> element with controls) below the recording controls when a preview URL exists. Label the preview section with 'Recording Preview' or similar text. Keep the existing download button visible alongside the preview player. Clear the preview URL and revoke the object URL when the user starts a new recording or after successfully uploading the video. Ensure the preview player is responsive and clearly indicates it shows the local recording before upload."
+          "description": "Remove any client-side validation that prevents saving an empty or whitespace-only title in the inline title-editing UI. Update the title input field to display helper text in English indicating that the title is optional (e.g., 'Optional – leave blank to auto-generate a title'). Ensure that when a user clears the title and saves, the component calls the backend updateVideoTitle function with an empty string and refreshes the video list to display the auto-generated title returned from the backend."
         }
       ]
     }
