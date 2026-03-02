@@ -2,8 +2,8 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-in-the-admin-video-management-panel-videomanagementpanel-tsx-update-the-inline-title-editing-ui-so-the-title-field-is-optional-remove-any-client-side-validation-that-prevents-saving-an-empty-or-whitespace-title-the-helper-text-next-to-the-title-input-must-indicate-in-english-that-the-title-is-optional-and-that-a-default-title-will-be-generated-automatically-if-left-blank",
-      "featureTitle": "In the admin Video Management Panel (`VideoManagementPanel.tsx`), update the inline title-editing UI so the title field is optional. Remove any client-side validation that prevents saving an empty or whitespace title. The helper text next to the title input must indicate in English that the title is optional and that a default title will be generated automatically if left blank.",
+      "featureId": "feature-in-the-admin-video-management-panel-videomanagementpanel-tsx-display-geographic-view-breakdown-data-for-videos-that-already-have-recorded-views-not-only-for-views-captured-after-the-feature-was-introduced-the-country-breakdown-panel-must-show-all-view-records-currently-stored-in-videoviewrecords-regardless-of-when-they-were-recorded-if-existing-view-records-have-no-country-data-e-g-country-is-empty-or-unknown-display-them-as-unknown-in-the-breakdown-list",
+      "featureTitle": "In the admin Video Management Panel (VideoManagementPanel.tsx), display geographic view breakdown data for videos that already have recorded views — not only for views captured after the feature was introduced. The country breakdown panel must show all view records currently stored in `videoViewRecords`, regardless of when they were recorded. If existing view records have no country data (e.g., country is empty or unknown), display them as 'Unknown' in the breakdown list.",
       "files": [
         "frontend/src/components/VideoManagementPanel.tsx"
       ],
@@ -19,7 +19,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-8"
+        "REQ-13"
       ],
       "confidence": "high"
     }

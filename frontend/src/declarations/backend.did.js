@@ -24,6 +24,12 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const CountryCode = IDL.Text;
+export const CountryName = IDL.Text;
+export const CountryInfo = IDL.Record({
+  'code' : CountryCode,
+  'name' : CountryName,
+});
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const Time = IDL.Int;
 export const VideoCategory = IDL.Variant({
@@ -93,6 +99,10 @@ export const ThumbnailMeta = IDL.Record({
   'dimensions' : IDL.Record({ 'height' : IDL.Nat, 'width' : IDL.Nat }),
   'videoId' : IDL.Text,
 });
+export const VideoViewRecord = IDL.Record({
+  'country' : CountryInfo,
+  'timestamp' : Time,
+});
 export const ContactForm = IDL.Record({
   'name' : IDL.Text,
   'email' : IDL.Text,
@@ -159,6 +169,11 @@ export const idlService = IDL.Service({
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'bulkDeleteVideos' : IDL.Func([IDL.Vec(IDL.Text)], [], []),
   'bulkMoveVideosToCategory' : IDL.Func([IDL.Vec(IDL.Text), IDL.Text], [], []),
+  'bulkRecordViews' : IDL.Func(
+      [IDL.Vec(IDL.Tuple(IDL.Text, CountryInfo))],
+      [],
+      [],
+    ),
   'deleteCustomThumbnail' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'deleteMessage' : IDL.Func([IDL.Text], [], []),
   'deleteVideo' : IDL.Func([IDL.Text], [], []),
@@ -229,16 +244,26 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getViewCount' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
+  'getViewRecords' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(VideoViewRecord)],
+      ['query'],
+    ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'moveVideoToCategory' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'publishPendingVideo' : IDL.Func([IDL.Text], [IDL.Text], []),
+  'recordView' : IDL.Func([IDL.Text, CountryInfo], [], []),
   'replyToMessage' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'retryVerification' : IDL.Func([], [], []),
   'revertToAutoThumbnail' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'startRecording' : IDL.Func([], [], []),
   'stopRecording' : IDL.Func([], [], []),
-  'streamVideo' : IDL.Func([IDL.Text], [IDL.Opt(ExternalBlob)], []),
+  'streamVideo' : IDL.Func(
+      [IDL.Text, IDL.Opt(CountryInfo)],
+      [IDL.Opt(ExternalBlob)],
+      [],
+    ),
   'submitContactForm' : IDL.Func([ContactForm, FormType], [IDL.Text], []),
   'transform' : IDL.Func(
       [TransformationInput],
@@ -299,6 +324,12 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const CountryCode = IDL.Text;
+  const CountryName = IDL.Text;
+  const CountryInfo = IDL.Record({
+    'code' : CountryCode,
+    'name' : CountryName,
   });
   const ExternalBlob = IDL.Vec(IDL.Nat8);
   const Time = IDL.Int;
@@ -375,6 +406,10 @@ export const idlFactory = ({ IDL }) => {
     'dimensions' : IDL.Record({ 'height' : IDL.Nat, 'width' : IDL.Nat }),
     'videoId' : IDL.Text,
   });
+  const VideoViewRecord = IDL.Record({
+    'country' : CountryInfo,
+    'timestamp' : Time,
+  });
   const ContactForm = IDL.Record({
     'name' : IDL.Text,
     'email' : IDL.Text,
@@ -439,6 +474,11 @@ export const idlFactory = ({ IDL }) => {
     'bulkDeleteVideos' : IDL.Func([IDL.Vec(IDL.Text)], [], []),
     'bulkMoveVideosToCategory' : IDL.Func(
         [IDL.Vec(IDL.Text), IDL.Text],
+        [],
+        [],
+      ),
+    'bulkRecordViews' : IDL.Func(
+        [IDL.Vec(IDL.Tuple(IDL.Text, CountryInfo))],
         [],
         [],
       ),
@@ -516,16 +556,26 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getViewCount' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
+    'getViewRecords' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(VideoViewRecord)],
+        ['query'],
+      ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'moveVideoToCategory' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'publishPendingVideo' : IDL.Func([IDL.Text], [IDL.Text], []),
+    'recordView' : IDL.Func([IDL.Text, CountryInfo], [], []),
     'replyToMessage' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'retryVerification' : IDL.Func([], [], []),
     'revertToAutoThumbnail' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'startRecording' : IDL.Func([], [], []),
     'stopRecording' : IDL.Func([], [], []),
-    'streamVideo' : IDL.Func([IDL.Text], [IDL.Opt(ExternalBlob)], []),
+    'streamVideo' : IDL.Func(
+        [IDL.Text, IDL.Opt(CountryInfo)],
+        [IDL.Opt(ExternalBlob)],
+        [],
+      ),
     'submitContactForm' : IDL.Func([ContactForm, FormType], [IDL.Text], []),
     'transform' : IDL.Func(
         [TransformationInput],

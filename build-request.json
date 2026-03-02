@@ -1,55 +1,57 @@
 {
   "kind": "build_request",
-  "title": "Allow editing already-uploaded Analysis video titles to be blank/empty",
+  "title": "Show geographic location data for existing video views",
   "projectName": "MECT EW",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-7",
-      "text": "Update the backend `updateVideoTitle` (or equivalent) function so it accepts an empty or whitespace-only string as a valid title for an already-uploaded video. If the provided title is empty or whitespace, the backend should store a server-generated default title (e.g., based on upload date/time) rather than rejecting the request or trapping.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-9"
-        ],
-        "quotes": [
-          "necesito que el titulo de los videos de la seccion analisis que ya estan subidos, tambien tengan la posibilidad de que su titulo sea opcional"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Calling the update-title backend function with an empty string does not return an error or trap.",
-        "If the submitted title is empty or whitespace, the stored title is replaced with a non-empty auto-generated default (e.g., 'Video – <date>').",
-        "If a non-empty title is provided, it is stored as-is (existing behaviour preserved)."
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "In the admin Video Management Panel (`VideoManagementPanel.tsx`), update the inline title-editing UI so the title field is optional. Remove any client-side validation that prevents saving an empty or whitespace title. The helper text next to the title input must indicate in English that the title is optional and that a default title will be generated automatically if left blank.",
+      "id": "REQ-13",
+      "text": "In the admin Video Management Panel (VideoManagementPanel.tsx), display geographic view breakdown data for videos that already have recorded views — not only for views captured after the feature was introduced. The country breakdown panel must show all view records currently stored in `videoViewRecords`, regardless of when they were recorded. If existing view records have no country data (e.g., country is empty or unknown), display them as 'Unknown' in the breakdown list.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-9"
+          "msg-5"
         ],
         "quotes": [
-          "necesito que el titulo de los videos de la seccion analisis que ya estan subidos, tambien tengan la posibilidad de que su titulo sea opcional"
+          "se podra ver la ubicacion tambien de las visitas ya existentes?"
         ]
       },
       "acceptanceCriteria": [
-        "The title input field in the video management panel does not show a validation error when left empty.",
-        "Submitting an empty title does not block the save action.",
-        "A helper label near the title field reads something like: 'Optional – leave blank to auto-generate a title.'",
-        "After saving an empty title, the video row reflects the auto-generated title returned from the backend."
+        "The geographic breakdown panel in VideoManagementPanel.tsx renders for any video whose view records exist in the backend, including records created before geographic tracking was added.",
+        "View records with a missing, empty, or null country value are grouped and displayed under an 'Unknown' label in the breakdown panel.",
+        "The breakdown is sorted by view count descending, with 'Unknown' entries included in the sort.",
+        "No new views are required for the panel to appear — existing view records alone are sufficient to trigger display.",
+        "The panel remains visible only to admin users."
+      ]
+    },
+    {
+      "id": "REQ-14",
+      "text": "In the backend (main.mo), when returning per-video view records via the geographic view query function, do not filter out records that have an empty or missing country field. Ensure that all stored view records — including those recorded before country capture was implemented — are returned to the caller so the frontend can display them (grouping unknowns as 'Unknown').",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ],
+        "quotes": [
+          "se podra ver la ubicacion tambien de las visitas ya existentes?"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The backend geographic view query returns all view records for a given video, including those with an empty or null country field.",
+        "Records with no country are returned with an empty string or a sentinel value that the frontend can detect and label as 'Unknown'.",
+        "No existing view records are dropped or hidden due to missing country data."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
-    "All Motoko logic must remain in backend/main.mo (single-actor architecture)."
+    "Do not modify files listed in frontend.immutablePaths.",
+    "All Motoko logic must remain in the single main actor (backend/main.mo).",
+    "The geographic breakdown panel must remain admin-only."
   ],
   "nonGoals": [
-    "Changing the upload flow for new videos (already handled by existing features).",
-    "Modifying the public video gallery display logic.",
-    "Altering thumbnail management behaviour."
+    "Retroactively resolving or inferring country data for existing views from IP logs or other metadata — unknown entries should simply be labeled 'Unknown'.",
+    "Adding new view-tracking or geolocation capture logic (already implemented in a prior feature).",
+    "Changing the public-facing VideoGallery component."
   ],
   "imageRequirements": {
     "required": [],

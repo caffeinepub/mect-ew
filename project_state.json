@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 14,
+  "projectStateVersion": 20,
   "summary": "MECT EW is a single-page web app deployed on the Internet Computer (Motoko canister backend + React frontend) for publishing categorized financial market analysis videos and collecting enquiries (contact/consultancy/mentoring). The site supports Internet Identity authentication, role-based admin controls, video upload (screen recording + manual upload), public video browsing by category, admin video management (search/filter, preview, download, delete, edit title, thumbnail management), and admin message management (view/filter, reply, delete). It also includes an admin-facing custom domain/DNS verification workflow with backend HTTP outcalls and frontend guidance UI.",
   "architectural_notes": [
     "ICP canister backend written in Motoko with modular mixins: blob-storage mixin (caffeine storage lifecycle/GC helpers) and authorization mixin (access control API).",
@@ -26,7 +26,7 @@
     "Users reported intermittent admin recognition after Internet Identity login ('not authorized' after successful II), indicating unstable role/session recognition or admin bootstrap token flow issues.",
     "Manual video upload previously failed with 'ExternalBlob is not defined', indicating a missing/incorrect import/binding in the manual upload path (regression risk)."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "IF-1",
@@ -275,6 +275,30 @@
         "REQ-8"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-in-the-frontend-upload-forms-screenrecorder-and-manualvideoupload-and-the-videomanagementpanel-inline-title-editor-remove-any-logic-that-substitutes-a-generated-default-title-e-g-title-1-untitled-or-any-auto-increment-label-when-the-user-leaves-the-title-field-blank-an-intentionally-blank-title-must-be-sent-to-the-backend-as-is",
+      "title": "In the frontend upload forms (ScreenRecorder and ManualVideoUpload) and the VideoManagementPanel inline title editor, remove any logic that substitutes a generated default title (e.g., 'Title 1', 'Untitled', or any auto-increment label) when the user leaves the title field blank. An intentionally blank title must be sent to the backend as-is.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-analysis-page-s-video-management-area-for-each-video-that-has-view-data-display-a-geographic-breakdown-panel-showing-how-many-views-originated-from-each-country-this-panel-should-be-visible-only-to-admin-users-it-should-display-alongside-or-below-the-existing-total-view-count-listing-each-country-and-its-corresponding-view-count-sorted-by-count-descending",
+      "title": "In the Analysis page's video management area, for each video that has view data, display a geographic breakdown panel showing how many views originated from each country. This panel should be visible only to admin users. It should display alongside or below the existing total view count, listing each country and its corresponding view count, sorted by count descending.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-admin-video-management-panel-videomanagementpanel-tsx-display-geographic-view-breakdown-data-for-videos-that-already-have-recorded-views-not-only-for-views-captured-after-the-feature-was-introduced-the-country-breakdown-panel-must-show-all-view-records-currently-stored-in-videoviewrecords-regardless-of-when-they-were-recorded-if-existing-view-records-have-no-country-data-e-g-country-is-empty-or-unknown-display-them-as-unknown-in-the-breakdown-list",
+      "title": "In the admin Video Management Panel (VideoManagementPanel.tsx), display geographic view breakdown data for videos that already have recorded views — not only for views captured after the feature was introduced. The country breakdown panel must show all view records currently stored in `videoViewRecords`, regardless of when they were recorded. If existing view records have no country data (e.g., country is empty or unknown), display them as 'Unknown' in the breakdown list.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -351,6 +375,42 @@
       "summary": "Update the backend `updateVideoTitle` (or equivalent) function so it accepts an empty or whitespace-only string as a valid title for an already-uploaded video. If the provided title is empty or whitespace, the backend should store a server-generated default title (e.g., based on upload date/time) rather than rejecting the request or trapping.",
       "reqIds": [
         "REQ-7"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "In the backend `updateVideoTitle` function (and any related upload handlers), when the provided title is empty or whitespace, store an empty string as the title rather than substituting a generated default (e.g., 'Title 1'). The backend must not auto-populate a fallback title if the caller intentionally submits a blank value.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "For Analysis videos, show geographic/country breakdown of views (where in the world each view comes from), in addition to the total view count already displayed",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Extend the backend video view tracking to capture and store the geographic origin (country) of each view. When a view is recorded, attempt to resolve the caller's approximate country from the request context or IP-based metadata available on the Internet Computer. Store per-video view records as a list of entries containing at minimum a country code/name and a timestamp.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Backfill/show geographic location data for existing (already recorded) video views, not just new views going forward",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "In the backend (main.mo), when returning per-video view records via the geographic view query function, do not filter out records that have an empty or missing country field. Ensure that all stored view records — including those recorded before country capture was implemented — are returned to the caller so the frontend can display them (grouping unknowns as 'Unknown').",
+      "reqIds": [
+        "REQ-14"
       ],
       "status": "pending"
     }

@@ -124,6 +124,10 @@ export interface VideoMeta {
     timestamp: Time;
     category: VideoCategory;
 }
+export interface VideoViewRecord {
+    country: CountryInfo;
+    timestamp: Time;
+}
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
@@ -138,15 +142,6 @@ export interface StoredMessage {
     timestamp: Time;
     reply?: string;
 }
-export interface PublicVideoMeta {
-    id: string;
-    title: string;
-    thumbnailUrl?: string;
-    hasCustomThumbnail: boolean;
-    sourceType: Variant_recorded_uploaded;
-    timestamp: Time;
-    category: VideoCategory;
-}
 export interface http_header {
     value: string;
     name: string;
@@ -156,14 +151,29 @@ export interface http_request_result {
     body: Uint8Array;
     headers: Array<http_header>;
 }
-export interface ContactForm {
-    name: string;
-    email: string;
-    message: string;
+export interface PublicVideoMeta {
+    id: string;
+    title: string;
+    thumbnailUrl?: string;
+    hasCustomThumbnail: boolean;
+    sourceType: Variant_recorded_uploaded;
+    timestamp: Time;
+    category: VideoCategory;
+}
+export interface CountryInfo {
+    code: CountryCode;
+    name: CountryName;
 }
 export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
+}
+export type CountryCode = string;
+export type CountryName = string;
+export interface ContactForm {
+    name: string;
+    email: string;
+    message: string;
 }
 export interface UserProfile {
     name: string;
@@ -229,6 +239,7 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bulkDeleteVideos(videoIds: Array<string>): Promise<void>;
     bulkMoveVideosToCategory(videoIds: Array<string>, newCategoryText: string): Promise<void>;
+    bulkRecordViews(viewEntries: Array<[string, CountryInfo]>): Promise<void>;
     deleteCustomThumbnail(videoId: string, thumbnailId: string): Promise<void>;
     deleteMessage(messageId: string): Promise<void>;
     deleteVideo(videoId: string): Promise<void>;
@@ -256,16 +267,18 @@ export interface backendInterface {
     getVideoThumbnails(videoId: string): Promise<Array<string>>;
     getVideosByCategory(category: VideoCategory): Promise<Array<PublicVideoMeta>>;
     getViewCount(videoId: string): Promise<bigint>;
+    getViewRecords(videoId: string): Promise<Array<VideoViewRecord>>;
     isCallerAdmin(): Promise<boolean>;
     moveVideoToCategory(videoId: string, newCategoryText: string): Promise<void>;
     publishPendingVideo(pendingVideoId: string): Promise<string>;
+    recordView(videoId: string, country: CountryInfo): Promise<void>;
     replyToMessage(messageId: string, replyText: string): Promise<void>;
     retryVerification(): Promise<void>;
     revertToAutoThumbnail(videoId: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     startRecording(): Promise<void>;
     stopRecording(): Promise<void>;
-    streamVideo(videoId: string): Promise<ExternalBlob | null>;
+    streamVideo(videoId: string, country: CountryInfo | null): Promise<ExternalBlob | null>;
     submitContactForm(form: ContactForm, formType: FormType): Promise<string>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateVideoTitle(videoId: string, newTitle: string): Promise<void>;
@@ -280,7 +293,7 @@ export interface backendInterface {
     }, fileSize: bigint, _imageFormat: Variant_jpg_png_webp): Promise<string>;
     uploadVideo(title: string, blob: ExternalBlob, fileSize: bigint, category: VideoCategory): Promise<string>;
 }
-import type { ExternalBlob as _ExternalBlob, FormType as _FormType, ImageFormat as _ImageFormat, MessageStatus as _MessageStatus, PublicVideoMeta as _PublicVideoMeta, StoredMessage as _StoredMessage, ThumbnailMeta as _ThumbnailMeta, ThumbnailType as _ThumbnailType, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole, VideoCategory as _VideoCategory, VideoFileType as _VideoFileType, VideoMeta as _VideoMeta, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { CountryInfo as _CountryInfo, ExternalBlob as _ExternalBlob, FormType as _FormType, ImageFormat as _ImageFormat, MessageStatus as _MessageStatus, PublicVideoMeta as _PublicVideoMeta, StoredMessage as _StoredMessage, ThumbnailMeta as _ThumbnailMeta, ThumbnailType as _ThumbnailType, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole, VideoCategory as _VideoCategory, VideoFileType as _VideoFileType, VideoMeta as _VideoMeta, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -420,6 +433,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.bulkMoveVideosToCategory(arg0, arg1);
+            return result;
+        }
+    }
+    async bulkRecordViews(arg0: Array<[string, CountryInfo]>): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.bulkRecordViews(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.bulkRecordViews(arg0);
             return result;
         }
     }
@@ -749,6 +776,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getViewRecords(arg0: string): Promise<Array<VideoViewRecord>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getViewRecords(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getViewRecords(arg0);
+            return result;
+        }
+    }
     async isCallerAdmin(): Promise<boolean> {
         if (this.processError) {
             try {
@@ -788,6 +829,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.publishPendingVideo(arg0);
+            return result;
+        }
+    }
+    async recordView(arg0: string, arg1: CountryInfo): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.recordView(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.recordView(arg0, arg1);
             return result;
         }
     }
@@ -875,17 +930,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async streamVideo(arg0: string): Promise<ExternalBlob | null> {
+    async streamVideo(arg0: string, arg1: CountryInfo | null): Promise<ExternalBlob | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.streamVideo(arg0);
+                const result = await this.actor.streamVideo(arg0, to_candid_opt_n49(this._uploadFile, this._downloadFile, arg1));
                 return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.streamVideo(arg0);
+            const result = await this.actor.streamVideo(arg0, to_candid_opt_n49(this._uploadFile, this._downloadFile, arg1));
             return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -937,28 +992,28 @@ export class Backend implements backendInterface {
     }, arg4: bigint): Promise<string> {
         if (this.processError) {
             try {
-                const result = await this.actor.uploadCustomThumbnail(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), to_candid_ImageFormat_n49(this._uploadFile, this._downloadFile, arg2), arg3, arg4);
+                const result = await this.actor.uploadCustomThumbnail(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), to_candid_ImageFormat_n50(this._uploadFile, this._downloadFile, arg2), arg3, arg4);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.uploadCustomThumbnail(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), to_candid_ImageFormat_n49(this._uploadFile, this._downloadFile, arg2), arg3, arg4);
+            const result = await this.actor.uploadCustomThumbnail(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), to_candid_ImageFormat_n50(this._uploadFile, this._downloadFile, arg2), arg3, arg4);
             return result;
         }
     }
     async uploadManualVideo(arg0: string, arg1: ExternalBlob, arg2: bigint, arg3: VideoCategory, arg4: VideoFileType): Promise<string> {
         if (this.processError) {
             try {
-                const result = await this.actor.uploadManualVideo(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), arg2, to_candid_VideoCategory_n21(this._uploadFile, this._downloadFile, arg3), to_candid_VideoFileType_n51(this._uploadFile, this._downloadFile, arg4));
+                const result = await this.actor.uploadManualVideo(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), arg2, to_candid_VideoCategory_n21(this._uploadFile, this._downloadFile, arg3), to_candid_VideoFileType_n52(this._uploadFile, this._downloadFile, arg4));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.uploadManualVideo(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), arg2, to_candid_VideoCategory_n21(this._uploadFile, this._downloadFile, arg3), to_candid_VideoFileType_n51(this._uploadFile, this._downloadFile, arg4));
+            const result = await this.actor.uploadManualVideo(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), arg2, to_candid_VideoCategory_n21(this._uploadFile, this._downloadFile, arg3), to_candid_VideoFileType_n52(this._uploadFile, this._downloadFile, arg4));
             return result;
         }
     }
@@ -968,14 +1023,14 @@ export class Backend implements backendInterface {
     }, arg4: bigint, arg5: Variant_jpg_png_webp): Promise<string> {
         if (this.processError) {
             try {
-                const result = await this.actor.uploadThumbnail(arg0, arg1, to_candid_ThumbnailType_n53(this._uploadFile, this._downloadFile, arg2), arg3, arg4, to_candid_variant_n50(this._uploadFile, this._downloadFile, arg5));
+                const result = await this.actor.uploadThumbnail(arg0, arg1, to_candid_ThumbnailType_n54(this._uploadFile, this._downloadFile, arg2), arg3, arg4, to_candid_variant_n51(this._uploadFile, this._downloadFile, arg5));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.uploadThumbnail(arg0, arg1, to_candid_ThumbnailType_n53(this._uploadFile, this._downloadFile, arg2), arg3, arg4, to_candid_variant_n50(this._uploadFile, this._downloadFile, arg5));
+            const result = await this.actor.uploadThumbnail(arg0, arg1, to_candid_ThumbnailType_n54(this._uploadFile, this._downloadFile, arg2), arg3, arg4, to_candid_variant_n51(this._uploadFile, this._downloadFile, arg5));
             return result;
         }
     }
@@ -1322,11 +1377,11 @@ async function to_candid_ExternalBlob_n10(_uploadFile: (file: ExternalBlob) => P
 function to_candid_FormType_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: FormType): _FormType {
     return to_candid_variant_n34(_uploadFile, _downloadFile, value);
 }
-function to_candid_ImageFormat_n49(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ImageFormat): _ImageFormat {
-    return to_candid_variant_n50(_uploadFile, _downloadFile, value);
+function to_candid_ImageFormat_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ImageFormat): _ImageFormat {
+    return to_candid_variant_n51(_uploadFile, _downloadFile, value);
 }
-function to_candid_ThumbnailType_n53(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ThumbnailType): _ThumbnailType {
-    return to_candid_variant_n54(_uploadFile, _downloadFile, value);
+function to_candid_ThumbnailType_n54(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ThumbnailType): _ThumbnailType {
+    return to_candid_variant_n55(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n9(_uploadFile, _downloadFile, value);
@@ -1334,8 +1389,8 @@ function to_candid_UserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint
 function to_candid_VideoCategory_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: VideoCategory): _VideoCategory {
     return to_candid_variant_n22(_uploadFile, _downloadFile, value);
 }
-function to_candid_VideoFileType_n51(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: VideoFileType): _VideoFileType {
-    return to_candid_variant_n52(_uploadFile, _downloadFile, value);
+function to_candid_VideoFileType_n52(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: VideoFileType): _VideoFileType {
+    return to_candid_variant_n53(_uploadFile, _downloadFile, value);
 }
 function to_candid__CaffeineStorageRefillInformation_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _CaffeineStorageRefillInformation): __CaffeineStorageRefillInformation {
     return to_candid_record_n3(_uploadFile, _downloadFile, value);
@@ -1345,6 +1400,9 @@ function to_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Arra
 }
 function to_candid_opt_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: FormType | null): [] | [_FormType] {
     return value === null ? candid_none() : candid_some(to_candid_FormType_n33(_uploadFile, _downloadFile, value));
+}
+function to_candid_opt_n49(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: CountryInfo | null): [] | [_CountryInfo] {
+    return value === null ? candid_none() : candid_some(value);
 }
 function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     proposed_top_up_amount?: bigint;
@@ -1393,7 +1451,7 @@ function to_candid_variant_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint
         mentoria: null
     } : value;
 }
-function to_candid_variant_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Variant_jpg_png_webp): {
+function to_candid_variant_n51(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Variant_jpg_png_webp): {
     jpg: null;
 } | {
     png: null;
@@ -1408,7 +1466,7 @@ function to_candid_variant_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint
         webp: null
     } : value;
 }
-function to_candid_variant_n52(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: VideoFileType): {
+function to_candid_variant_n53(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: VideoFileType): {
     avi: null;
 } | {
     mov: null;
@@ -1427,7 +1485,7 @@ function to_candid_variant_n52(_uploadFile: (file: ExternalBlob) => Promise<Uint
         webm: null
     } : value;
 }
-function to_candid_variant_n54(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ThumbnailType): {
+function to_candid_variant_n55(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ThumbnailType): {
     autoGenerated: null;
 } | {
     manualUpload: null;

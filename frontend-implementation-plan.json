@@ -1,22 +1,23 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Allow editing already-uploaded Analysis video titles to be blank/empty",
+  "title": "Show geographic location data for existing video views",
   "requirements": [
     {
-      "id": "REQ-8",
-      "summary": "Update the admin Video Management Panel to make the title field optional, remove client-side validation that prevents saving empty titles, and add helper text indicating that leaving the title blank will auto-generate a default title.",
+      "id": "REQ-13",
+      "summary": "Display geographic view breakdown for all existing video views in the admin Video Management Panel, including views recorded before geographic tracking was added, with unknown countries labeled as 'Unknown'",
       "acceptanceCriteria": [
-        "The title input field in the video management panel does not show a validation error when left empty.",
-        "Submitting an empty title does not block the save action.",
-        "A helper label near the title field reads something like: 'Optional – leave blank to auto-generate a title.'",
-        "After saving an empty title, the video row reflects the auto-generated title returned from the backend."
+        "The geographic breakdown panel in VideoManagementPanel.tsx renders for any video whose view records exist in the backend, including records created before geographic tracking was added.",
+        "View records with a missing, empty, or null country value are grouped and displayed under an 'Unknown' label in the breakdown panel.",
+        "The breakdown is sorted by view count descending, with 'Unknown' entries included in the sort.",
+        "No new views are required for the panel to appear — existing view records alone are sufficient to trigger display.",
+        "The panel remains visible only to admin users."
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/VideoManagementPanel.tsx",
           "operation": "modify",
-          "description": "Remove any client-side validation that prevents saving an empty or whitespace-only title in the inline title-editing UI. Update the title input field to display helper text in English indicating that the title is optional (e.g., 'Optional – leave blank to auto-generate a title'). Ensure that when a user clears the title and saves, the component calls the backend updateVideoTitle function with an empty string and refreshes the video list to display the auto-generated title returned from the backend."
+          "description": "Update the geographic breakdown logic to handle all view records returned by getViewRecords, including those with missing, empty, or null country data. Group records with missing country information under an 'Unknown' label. Ensure the breakdown panel displays for any video with existing view records, regardless of when they were recorded. Sort the breakdown by view count in descending order, including 'Unknown' entries in the sort. The panel must remain admin-only and leverage the existing useGetViewRecords hook without modification."
         }
       ]
     }

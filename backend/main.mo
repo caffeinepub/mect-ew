@@ -5,19 +5,27 @@ import Text "mo:core/Text";
 import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Array "mo:core/Array";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import OutCall "http-outcalls/outcall";
 
-// No data migration needed as we only modify behavior - not persistent state.
+
 
 actor {
   include MixinStorage();
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
+
+  public type CountryCode = Text;
+  public type CountryName = Text;
+  public type CountryInfo = {
+    code : CountryCode;
+    name : CountryName;
+  };
 
   public type VideoCategory = {
     #indices;
@@ -145,6 +153,11 @@ actor {
     lastVerificationAttempt : ?Time.Time;
   };
 
+  public type VideoViewRecord = {
+    country : CountryInfo;
+    timestamp : Time.Time;
+  };
+
   let videos = Map.empty<Text, VideoMeta>();
   let pendingVideos = Map.empty<Text, VideoMeta>();
   let messages = Map.empty<Text, StoredMessage>();
@@ -156,6 +169,7 @@ actor {
   let userProfiles = Map.empty<Principal, UserProfile>();
 
   let videoViewCounts = Map.empty<Text, Nat>();
+  let videoViewRecords = Map.empty<Text, [VideoViewRecord]>();
 
   var domainVerificationToken : ?Text = ?"INITIAL_VERIFICATION_TOKEN";
   var customDomainStatus : {
@@ -165,8 +179,6 @@ actor {
     #notConfigured;
   } = #notConfigured;
   var domainLastVerificationAttempt : ?Time.Time = null;
-
-  var defaultTitleCounter : Nat = 1;
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -269,34 +281,6 @@ actor {
     messages.remove(messageId);
   };
 
-  func trim(text : Text) : Text {
-    func isTrimChar(ch : Char) : Bool {
-      ch == ' ' or ch == '\t' or ch == '\n';
-    };
-
-    let chars = text.toArray();
-    let len = chars.size();
-
-    var start = 0;
-    while (start < len and isTrimChar(chars[start])) {
-      start += 1;
-    };
-
-    var end = len;
-    if (end > 0) {
-      let mut_ch = chars[end - 1];
-      while (end > 0 and isTrimChar(mut_ch)) {
-        end -= 1;
-      };
-    };
-
-    if (start >= end) {
-      return "";
-    };
-
-    fromArray(chars.sliceToArray(start, end));
-  };
-
   func fromArray(array : [Char]) : Text {
     array.foldRight(
       "",
@@ -304,17 +288,6 @@ actor {
         Text.fromChar(char) # acc;
       },
     );
-  };
-
-  func generateDefaultTitle() : Text {
-    let title = "Sin título " # defaultTitleCounter.toText();
-    defaultTitleCounter += 1;
-    title;
-  };
-
-  func isNullOrWhitespace(title : Text) : Bool {
-    let trimmed = trim(title);
-    trimmed.isEmpty();
   };
 
   public shared ({ caller }) func uploadVideo(
@@ -330,15 +303,9 @@ actor {
     videoCounter += 1;
     let id = "video_" # videoCounter.toText();
 
-    let finalTitle = if (isNullOrWhitespace(title)) {
-      generateDefaultTitle();
-    } else {
-      title;
-    };
-
     let videoMeta : VideoMeta = {
       id = id;
-      title = finalTitle;
+      title = title;
       timestamp = Time.now();
       fileSize = fileSize;
       blob = blob;
@@ -367,15 +334,9 @@ actor {
     videoCounter += 1;
     let id = "video_" # videoCounter.toText();
 
-    let finalTitle = if (isNullOrWhitespace(title)) {
-      generateDefaultTitle();
-    } else {
-      title;
-    };
-
     let videoMeta : VideoMeta = {
       id = id;
-      title = finalTitle;
+      title = title;
       timestamp = Time.now();
       fileSize = fileSize;
       blob = blob;
@@ -576,7 +537,52 @@ actor {
     videos.get(videoId);
   };
 
-  public shared ({ caller }) func streamVideo(videoId : Text) : async ?Storage.ExternalBlob {
+  // Admin-only: view records contain geographic tracking data (country, timestamp) for all viewers
+  public query ({ caller }) func getViewRecords(videoId : Text) : async [VideoViewRecord] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Acceso no autorizado: Solo administradores pueden ver registros de visualizaciones");
+    };
+    switch (videoViewRecords.get(videoId)) {
+      case (null) { [] };
+      case (?r) { r };
+    };
+  };
+
+  // Open to all callers: recording a view is a public action triggered by watching a video
+  public shared ({ caller }) func recordView(videoId : Text, country : CountryInfo) : async () {
+    let viewRecord : VideoViewRecord = {
+      country = country;
+      timestamp = Time.now();
+    };
+
+    let existingRecords = switch (videoViewRecords.get(videoId)) {
+      case (null) { [] };
+      case (?r) { r };
+    };
+
+    let updatedRecords = existingRecords.concat([viewRecord]);
+    videoViewRecords.add(videoId, updatedRecords);
+  };
+
+  // Open to all callers: bulk recording views is a public action triggered by watching videos
+  public shared ({ caller }) func bulkRecordViews(viewEntries : [(Text, CountryInfo)]) : async () {
+    for ((videoId, country) in viewEntries.values()) {
+      let viewRecord : VideoViewRecord = {
+        country = country;
+        timestamp = Time.now();
+      };
+
+      let existingRecords = switch (videoViewRecords.get(videoId)) {
+        case (null) { [] };
+        case (?records) { records };
+      };
+
+      let updatedRecords = existingRecords.concat([viewRecord]);
+      videoViewRecords.add(videoId, updatedRecords);
+    };
+  };
+
+  public shared ({ caller }) func streamVideo(videoId : Text, country : ?CountryInfo) : async ?Storage.ExternalBlob {
     switch (videos.get(videoId)) {
       case (null) { null };
       case (?video) {
@@ -586,6 +592,24 @@ actor {
             case (?count) { count };
           };
           videoViewCounts.add(videoId, currentCount + 1);
+
+          switch (country) {
+            case (null) {};
+            case (?countryInfo) {
+              let viewRecord : VideoViewRecord = {
+                country = countryInfo;
+                timestamp = Time.now();
+              };
+
+              let existingRecords = switch (videoViewRecords.get(videoId)) {
+                case (null) { [] };
+                case (?records) { records };
+              };
+
+              let updatedRecords = existingRecords.concat([viewRecord]);
+              videoViewRecords.add(videoId, updatedRecords);
+            };
+          };
         };
         ?video.blob;
       };
@@ -817,7 +841,6 @@ actor {
     blob;
   };
 
-  // UPDATED: implementation - supports empty or whitespace title (stores default title)
   public shared ({ caller }) func updateVideoTitle(videoId : Text, newTitle : Text) : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Acceso no autorizado: Solo administradores pueden editar títulos de video");
@@ -826,14 +849,9 @@ actor {
     switch (videos.get(videoId)) {
       case (null) { Runtime.trap("Video no encontrado") };
       case (?video) {
-        let updatedTitle = if (isNullOrWhitespace(newTitle)) {
-          generateDefaultTitle();
-        } else {
-          newTitle;
-        };
         let updatedVideo : VideoMeta = {
           id = video.id;
-          title = updatedTitle;
+          title = newTitle;
           timestamp = video.timestamp;
           fileSize = video.fileSize;
           blob = video.blob;
@@ -848,7 +866,6 @@ actor {
     };
   };
 
-  // --- DNS OUTCALLS ---
   public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
     OutCall.transform(input);
   };
@@ -894,3 +911,4 @@ actor {
     };
   };
 };
+

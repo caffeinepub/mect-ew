@@ -46,6 +46,10 @@ export interface VideoMeta {
     timestamp: Time;
     category: VideoCategory;
 }
+export interface VideoViewRecord {
+    country: CountryInfo;
+    timestamp: Time;
+}
 export interface StoredMessage {
     id: string;
     status: MessageStatus;
@@ -56,15 +60,6 @@ export interface StoredMessage {
     timestamp: Time;
     reply?: string;
 }
-export interface PublicVideoMeta {
-    id: string;
-    title: string;
-    thumbnailUrl?: string;
-    hasCustomThumbnail: boolean;
-    sourceType: Variant_recorded_uploaded;
-    timestamp: Time;
-    category: VideoCategory;
-}
 export interface http_header {
     value: string;
     name: string;
@@ -74,14 +69,29 @@ export interface http_request_result {
     body: Uint8Array;
     headers: Array<http_header>;
 }
-export interface ContactForm {
-    name: string;
-    email: string;
-    message: string;
+export interface PublicVideoMeta {
+    id: string;
+    title: string;
+    thumbnailUrl?: string;
+    hasCustomThumbnail: boolean;
+    sourceType: Variant_recorded_uploaded;
+    timestamp: Time;
+    category: VideoCategory;
+}
+export interface CountryInfo {
+    code: CountryCode;
+    name: CountryName;
 }
 export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
+}
+export type CountryCode = string;
+export type CountryName = string;
+export interface ContactForm {
+    name: string;
+    email: string;
+    message: string;
 }
 export interface UserProfile {
     name: string;
@@ -136,6 +146,7 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bulkDeleteVideos(videoIds: Array<string>): Promise<void>;
     bulkMoveVideosToCategory(videoIds: Array<string>, newCategoryText: string): Promise<void>;
+    bulkRecordViews(viewEntries: Array<[string, CountryInfo]>): Promise<void>;
     deleteCustomThumbnail(videoId: string, thumbnailId: string): Promise<void>;
     deleteMessage(messageId: string): Promise<void>;
     deleteVideo(videoId: string): Promise<void>;
@@ -163,16 +174,18 @@ export interface backendInterface {
     getVideoThumbnails(videoId: string): Promise<Array<string>>;
     getVideosByCategory(category: VideoCategory): Promise<Array<PublicVideoMeta>>;
     getViewCount(videoId: string): Promise<bigint>;
+    getViewRecords(videoId: string): Promise<Array<VideoViewRecord>>;
     isCallerAdmin(): Promise<boolean>;
     moveVideoToCategory(videoId: string, newCategoryText: string): Promise<void>;
     publishPendingVideo(pendingVideoId: string): Promise<string>;
+    recordView(videoId: string, country: CountryInfo): Promise<void>;
     replyToMessage(messageId: string, replyText: string): Promise<void>;
     retryVerification(): Promise<void>;
     revertToAutoThumbnail(videoId: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     startRecording(): Promise<void>;
     stopRecording(): Promise<void>;
-    streamVideo(videoId: string): Promise<ExternalBlob | null>;
+    streamVideo(videoId: string, country: CountryInfo | null): Promise<ExternalBlob | null>;
     submitContactForm(form: ContactForm, formType: FormType): Promise<string>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateVideoTitle(videoId: string, newTitle: string): Promise<void>;

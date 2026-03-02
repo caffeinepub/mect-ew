@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Allow video titles in the Analysis section to be optional when editing already-uploaded videos, storing an auto-generated default title if left blank.
+**Goal:** Display geographic view breakdown data for all existing video views in the admin Video Management Panel, including views recorded before geographic tracking was introduced.
 
 **Planned changes:**
-- Update the backend `updateVideoTitle` function to accept empty or whitespace-only strings without error, storing an auto-generated default title (e.g., based on date/time) when the provided title is blank.
-- Remove client-side validation in `VideoManagementPanel.tsx` that blocks saving an empty title.
-- Add helper text near the title input field indicating the title is optional and a default will be auto-generated if left blank.
-- After saving an empty title, the video row updates to reflect the auto-generated title returned from the backend.
+- Update the backend (`main.mo`) geographic view query to return all view records regardless of whether they have country data, including records with empty or null country fields.
+- Update `VideoManagementPanel.tsx` to display the geographic breakdown panel for any video with existing view records, grouping entries with missing/empty/null country values under an "Unknown" label.
+- Ensure the breakdown list includes "Unknown" entries sorted by view count descending alongside known countries.
 
-**User-visible outcome:** Admins can clear a video's title in the Video Management Panel and save it without errors; the video will automatically display a generated default title instead.
+**User-visible outcome:** Admin users can now see the geographic breakdown panel for videos that already had recorded views before location tracking was added, with views that have no country data shown as "Unknown" in the breakdown list.

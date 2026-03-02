@@ -15,6 +15,9 @@ export interface ContactForm {
   'email' : string,
   'message' : string,
 }
+export type CountryCode = string;
+export interface CountryInfo { 'code' : CountryCode, 'name' : CountryName }
+export type CountryName = string;
 export type ExternalBlob = Uint8Array;
 export type FormType = { 'contacto' : null } |
   { 'consultoria' : null } |
@@ -95,6 +98,7 @@ export interface VideoMeta {
   'timestamp' : Time,
   'category' : VideoCategory,
 }
+export interface VideoViewRecord { 'country' : CountryInfo, 'timestamp' : Time }
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -132,6 +136,7 @@ export interface _SERVICE {
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'bulkDeleteVideos' : ActorMethod<[Array<string>], undefined>,
   'bulkMoveVideosToCategory' : ActorMethod<[Array<string>, string], undefined>,
+  'bulkRecordViews' : ActorMethod<[Array<[string, CountryInfo]>], undefined>,
   'deleteCustomThumbnail' : ActorMethod<[string, string], undefined>,
   'deleteMessage' : ActorMethod<[string], undefined>,
   'deleteVideo' : ActorMethod<[string], undefined>,
@@ -165,16 +170,21 @@ export interface _SERVICE {
   'getVideoThumbnails' : ActorMethod<[string], Array<string>>,
   'getVideosByCategory' : ActorMethod<[VideoCategory], Array<PublicVideoMeta>>,
   'getViewCount' : ActorMethod<[string], bigint>,
+  'getViewRecords' : ActorMethod<[string], Array<VideoViewRecord>>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'moveVideoToCategory' : ActorMethod<[string, string], undefined>,
   'publishPendingVideo' : ActorMethod<[string], string>,
+  'recordView' : ActorMethod<[string, CountryInfo], undefined>,
   'replyToMessage' : ActorMethod<[string, string], undefined>,
   'retryVerification' : ActorMethod<[], undefined>,
   'revertToAutoThumbnail' : ActorMethod<[string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'startRecording' : ActorMethod<[], undefined>,
   'stopRecording' : ActorMethod<[], undefined>,
-  'streamVideo' : ActorMethod<[string], [] | [ExternalBlob]>,
+  'streamVideo' : ActorMethod<
+    [string, [] | [CountryInfo]],
+    [] | [ExternalBlob]
+  >,
   'submitContactForm' : ActorMethod<[ContactForm, FormType], string>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateVideoTitle' : ActorMethod<[string, string], undefined>,

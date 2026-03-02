@@ -1,20 +1,19 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-25T13:46:57.202Z",
-  "summary": "Both REQ-7 (backend) and REQ-8 (frontend) appear to be at least partially implemented. The backend main.mo was modified and includes a `defaultTitleCounter` variable suggesting auto-title generation logic. The frontend VideoManagementPanel.tsx was modified. The useQueries.ts summary mentions 'video upload mutations now pass trimmed titles as-is without client-side validation to allow empty titles for backend auto-generation.' However, due to truncation of both backend/main.mo and VideoManagementPanel.tsx, it is not possible to fully verify all acceptance criteria, particularly: the helper label text in the UI, the exact auto-generation logic in the backend, and whether the video row reflects the auto-generated title after saving.",
-  "missing_requirements": [
+  "generatedAt": "2026-03-02T18:04:41.600Z",
+  "summary": "The diff implements both REQ-13 and REQ-14. The frontend (VideoManagementPanel.tsx) adds a GeoBreakdown component that aggregates view records by country, labels empty/missing country data as 'Unknown' (rendered as 'Desconocido'), sorts by count descending, and is admin-only. The backend (main.mo) and the useGetVideoViewRecords hook are also modified. However, the 'Unknown' label used in the UI is 'Desconocido' (Spanish) rather than the English 'Unknown' specified in the requirements, and the backend diff is truncated so full verification of REQ-14 is limited.",
+  "missing_requirements": [],
+  "hallucinated_features": [
     {
-      "id": "REQ-8",
-      "requirement": "A helper label near the title field reads something like: 'Optional – leave blank to auto-generate a title.'",
-      "reason": "The VideoManagementPanel.tsx diff is truncated before the title editing UI section is shown, so the presence of the required helper label text cannot be confirmed from the available evidence.",
+      "description": "The geographic breakdown panel labels unknown country entries as 'Desconocido' (Spanish) rather than 'Unknown' as specified in the requirements.",
+      "reason": "The build request explicitly states unknown entries should be labeled 'Unknown', but the implementation uses 'Desconocido' instead. This localization change was not requested.",
       "evidence": [
         "frontend/src/components/VideoManagementPanel.tsx"
       ]
     }
   ],
-  "hallucinated_features": [],
-  "confidence": 0.55,
+  "confidence": 0.72,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",

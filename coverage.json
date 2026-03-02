@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-25T13:46:57.206Z",
+  "generatedAt": "2026-03-02T18:04:41.604Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -11,15 +11,8 @@
     "implemented": 1,
     "items": [
       {
-        "id": "REQ-7",
-        "summary": "Update the backend `updateVideoTitle` (or equivalent) function so it accepts an empty or whitespace-only string as a valid title for an already-uploaded video. If the provided title is empty or whitespace, the backend should store a server-generated default title (e.g., based on upload date/time) rather than rejecting the request or trapping.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-8",
-        "summary": "In the admin Video Management Panel (`VideoManagementPanel.tsx`), update the inline title-editing UI so the title field is optional. Remove any client-side validation that prevents saving an empty or whitespace title. The helper text next to the title input must indicate in English that the title is optional and that a default title will be generated automatically if left blank.",
+        "id": "REQ-13",
+        "summary": "In the admin Video Management Panel (VideoManagementPanel.tsx), display geographic view breakdown data for videos that already have recorded views — not only for views captured after the feature was introduced. The country breakdown panel must show all view records currently stored in `videoViewRecords`, regardless of when they were recorded. If existing view records have no country data (e.g., country is empty or unknown), display them as 'Unknown' in the breakdown list.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/components/VideoManagementPanel.tsx"
@@ -27,6 +20,13 @@
         "matchedFiles": [
           "frontend/src/components/VideoManagementPanel.tsx"
         ]
+      },
+      {
+        "id": "REQ-14",
+        "summary": "In the backend (main.mo), when returning per-video view records via the geographic view query function, do not filter out records that have an empty or missing country field. Ensure that all stored view records — including those recorded before country capture was implemented — are returned to the caller so the frontend can display them (grouping unknowns as 'Unknown').",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },

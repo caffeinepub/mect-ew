@@ -28,7 +28,7 @@ export default function VideoGallery({ videos, isLoading }: VideoGalleryProps) {
   useEffect(() => {
     if (selectedVideo && actor) {
       setLoadingBlob(true);
-      actor.streamVideo(selectedVideo.id)
+      actor.streamVideo(selectedVideo.id, null)
         .then((blob) => {
           setVideoBlob(blob);
           // Invalidate view count queries after streaming completes (for admin)

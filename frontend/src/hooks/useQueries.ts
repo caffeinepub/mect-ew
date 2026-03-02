@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
-import type { UserProfile, VideoCategory, ContactForm, FormType, StoredMessage, VideoFileType } from '../backend';
+import type { UserProfile, VideoCategory, ContactForm, FormType, StoredMessage, VideoFileType, VideoViewRecord } from '../backend';
 import { ThumbnailType, Variant_jpg_png_webp } from '../backend';
 import { ExternalBlob } from '../backend';
 
@@ -133,6 +133,26 @@ export function useGetVideoViewCount(videoId: string, isAdmin: boolean) {
     refetchInterval: 30000, // Refetch every 30 seconds
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
+  });
+}
+
+export function useGetVideoViewRecords(videoId: string) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<VideoViewRecord[]>({
+    queryKey: ['videoViewRecords', videoId],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getViewRecords(videoId);
+      } catch (error) {
+        console.error('Error fetching view records:', error);
+        return [];
+      }
+    },
+    enabled: !!actor && !actorFetching && !!videoId,
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -319,6 +339,7 @@ export function useDeleteVideo() {
       queryClient.invalidateQueries({ queryKey: ['videos'] });
       queryClient.invalidateQueries({ queryKey: ['adminVideos'] });
       queryClient.invalidateQueries({ queryKey: ['videoViewCount'] });
+      queryClient.invalidateQueries({ queryKey: ['videoViewRecords'] });
     },
   });
 }
