@@ -64,7 +64,7 @@ export default function ConsultancyPage() {
                 </div>
               </div>
 
-              <div className="space-y-2 pt-4 border-t border-border">
+              <div className="space-y-2 pt-4">
                 <p className="text-muted-foreground leading-relaxed">
                   <span className="font-semibold text-foreground">
                     Formato:
