@@ -1,3 +1,9 @@
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { FormType } from "../backend";
@@ -5,6 +11,50 @@ import ContactForm from "../components/ContactForm";
 import FormSpecificMessageManagement from "../components/FormSpecificMessageManagement";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useIsCallerAdmin } from "../hooks/useQueries";
+
+const bloques = [
+  {
+    title: "Bloque 1: Mercados Financieros",
+    items: [
+      "1.1. Mercado de Dinero: Letra del Tesoro, Papel Comercial, Letras de Cambio, Plazo Fijo, Operación Recompra.",
+      "1.2. Mercado de Divisas: Futuro, Contado, ETFs, CFDs.",
+      "1.3. Mercado de Capitales: Bono, Acción, Futuro, ETFs, CFDs.",
+      "1.4. Mercado de Materias Primas: Futuro, ETFs, CFDs.",
+      "1.5. Mercado de Activos Digitales: Token, Criptomoneda, NFTs, ETFs, CFDs.",
+    ],
+  },
+  {
+    title: "Bloque 2: Agentes en los Mercados",
+    items: [
+      "2.1. Agente Intermediario: Bróker, Casa de Bolsa, Agente de Bolsa, Banco de Inversión, Banco Comercial.",
+      "2.2. Agente Infraestructura: Bolsa de Valores, Bolsa de Futuros, Exchange Activos Digitales, Plataforma de Negociación, Depósito Central de Valores.",
+      "2.3. Agente Oferente de Capital: Aseguradora, Persona Física, Banco Comercial, Fondo de Pensión, Fondo de Inversión.",
+      "2.4. Agente Demandante de Capital: Empresa, Gobierno, Institución Financiera.",
+      "2.5. Agente de Regulación y Supervisión: Banco Central, Organismo Regulación Sectorial, Autoridad Supervisión Financiera.",
+    ],
+  },
+  {
+    title: "Bloque 3: Teoría de Dow",
+    items: [
+      "3.1. Comportamiento Fractal",
+      "3.2. Tendencia (Alcista y Bajista)",
+      "3.3. Soporte",
+      "3.4. Resistencia",
+      "3.5. Línea de Tendencia (Alcista y Bajista)",
+    ],
+  },
+  {
+    title: "Bloque 4: Teoría de las Ondas de Elliott",
+    items: [
+      "4.1. Comportamiento Fractal",
+      "4.2. Ciclo (Fase de Impulso y Fase de Corrección)",
+      "4.3. Estructuras de Impulso (Simple y Diagonal)",
+      "4.4. Estructuras de Corrección (ZigZag, Plana y Triángulo)",
+      "4.5. Fibonacci: Ratios en Impulso Simple, Diagonal, ZigZag, Plana y Triángulo.",
+      "4.6. Operativa: Compra y Venta de Ondas 1/A, 3/C y Onda 5.",
+    ],
+  },
+];
 
 export default function MentoringPage() {
   const { identity } = useInternetIdentity();
@@ -32,76 +82,35 @@ export default function MentoringPage() {
 
               <h2 className="text-2xl font-bold pt-4">Temática del Programa</h2>
 
-              <div className="space-y-4 text-muted-foreground">
-                <p className="font-semibold text-foreground">
-                  Bloque 1: Mercados Financieros
-                </p>
-                <p>
-                  1.1. Mercado de Dinero: Letra del Tesoro, Papel Comercial,
-                  Letras de Cambio, Plazo Fijo, Operación Recompra.
-                </p>
-                <p>1.2. Mercado de Divisas: Futuro, Contado, ETFs, CFDs.</p>
-                <p>
-                  1.3. Mercado de Capitales: Bono, Acción, Futuro, ETFs, CFDs.
-                </p>
-                <p>1.4. Mercado de Materias Primas: Futuro, ETFs, CFDs.</p>
-                <p>
-                  1.5. Mercado de Activos Digitales: Token, Criptomoneda, NFTs,
-                  ETFs, CFDs.
-                </p>
-
-                <p className="font-semibold text-foreground pt-2">
-                  Bloque 2: Agentes en los Mercados
-                </p>
-                <p>
-                  2.1. Agente Intermediario: Bróker, Casa de Bolsa, Agente de
-                  Bolsa, Banco de Inversión, Banco Comercial.
-                </p>
-                <p>
-                  2.2. Agente Infraestructura: Bolsa de Valores, Bolsa de
-                  Futuros, Exchange Activos Digitales, Plataforma de
-                  Negociación, Depósito Central de Valores.
-                </p>
-                <p>
-                  2.3. Agente Oferente de Capital: Aseguradora, Persona Física,
-                  Banco Comercial, Fondo de Pensión, Fondo de Inversión.
-                </p>
-                <p>
-                  2.4. Agente Demandante de Capital: Empresa, Gobierno,
-                  Institución Financiera.
-                </p>
-                <p>
-                  2.5. Agente de Regulación y Supervisión: Banco Central,
-                  Organismo Regulación Sectorial, Autoridad Supervisión
-                  Financiera.
-                </p>
-
-                <p className="font-semibold text-foreground pt-2">
-                  Bloque 3: Teoría de Dow
-                </p>
-                <p>3.1. Comportamiento Fractal</p>
-                <p>3.2. Tendencia (Alcista y Bajista)</p>
-                <p>3.3. Soporte</p>
-                <p>3.4. Resistencia</p>
-                <p>3.5. Línea de Tendencia (Alcista y Bajista)</p>
-
-                <p className="font-semibold text-foreground pt-2">
-                  Bloque 4: Teoría de las Ondas de Elliott
-                </p>
-                <p>4.1. Comportamiento Fractal</p>
-                <p>4.2. Ciclo (Fase de Impulso y Fase de Corrección)</p>
-                <p>4.3. Estructuras de Impulso (Simple y Diagonal)</p>
-                <p>
-                  4.4. Estructuras de Corrección (ZigZag, Plana y Triángulo)
-                </p>
-                <p>
-                  4.5. Fibonacci: Ratios en Impulso Simple, Diagonal, ZigZag,
-                  Plana y Triángulo.
-                </p>
-                <p>
-                  4.6. Operativa: Compra y Venta de Ondas 1/A, 3/C y Onda 5.
-                </p>
-              </div>
+              <Accordion type="multiple" className="w-full space-y-1">
+                {bloques.map((bloque, index) => (
+                  <AccordionItem
+                    key={bloque.title}
+                    value={`bloque-${index + 1}`}
+                    data-ocid={`mentoring.bloque.item.${index + 1}`}
+                    className="border border-border rounded-none px-0"
+                  >
+                    <AccordionTrigger
+                      data-ocid={`mentoring.bloque.toggle.${index + 1}`}
+                      className="font-semibold text-foreground px-4 hover:no-underline hover:text-foreground"
+                    >
+                      {bloque.title}
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4">
+                      <ul className="space-y-2">
+                        {bloque.items.map((item) => (
+                          <li
+                            key={item}
+                            className="text-muted-foreground text-sm"
+                          >
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
 
               <h2 className="text-2xl font-bold pt-4">
                 Modalidad y Metodología
