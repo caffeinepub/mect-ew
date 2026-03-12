@@ -37,6 +37,52 @@ export default function AnalysisPage() {
               Análisis Técnico de Mercados Financieros
             </h1>
 
+            {/* Descriptive content block */}
+            <div className="max-w-3xl mx-auto space-y-8 mb-16">
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Exposición de escenarios técnicos basados en la Teoría de las
+                Ondas de Elliott. Estos reportes detallan la arquitectura del
+                precio en activos seleccionados, permitiendo una lectura
+                objetiva del ciclo.
+              </p>
+
+              <div className="space-y-4">
+                <p className="text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground">
+                    Fase del Ciclo:
+                  </span>{" "}
+                  Identificación de estructuras de impulso y estructuras de
+                  corrección en desarrollo.
+                </p>
+
+                <p className="text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground">
+                    Proyecciones de Fibonacci:
+                  </span>{" "}
+                  Aplicación de ratios de Fibonacci para delimitar zonas de alta
+                  probabilidad para la finalización de estructuras.
+                </p>
+
+                <p className="text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground">
+                    Escenarios Alternos:
+                  </span>{" "}
+                  Planteamiento de escenarios alternos en base a la estructura
+                  fractal.
+                </p>
+
+                <p className="text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground">Nota:</span>{" "}
+                  Los contenidos expuestos tienen un propósito estrictamente
+                  técnico-educativo y no constituyen recomendaciones de
+                  inversión ni asesoría financiera. La gestión de capital es
+                  responsabilidad individual del usuario.
+                </p>
+              </div>
+            </div>
+
+            <Separator className="mb-12" />
+
             {showUnauthorizedMessage && (
               <Alert variant="destructive" className="mb-8">
                 <AlertCircle className="h-4 w-4" />
