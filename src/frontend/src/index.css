@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    /* Monochromatic grayscale palette - Light mode */
+    --background: 1 0 0; /* Pure white */
+    --foreground: 0.15 0 0; /* Near black */
+    --card: 0.98 0 0; /* Off-white */
+    --card-foreground: 0.15 0 0;
+    --popover: 1 0 0;
+    --popover-foreground: 0.15 0 0;
+    --primary: 0.2 0 0; /* Dark gray */
+    --primary-foreground: 0.98 0 0;
+    --secondary: 0.95 0 0; /* Light gray */
+    --secondary-foreground: 0.2 0 0;
+    --muted: 0.96 0 0;
+    --muted-foreground: 0.45 0 0; /* Medium gray */
+    --accent: 0.92 0 0;
+    --accent-foreground: 0.2 0 0;
+    --destructive: 0.5 0.2 0; /* Slightly red-tinted for errors */
+    --destructive-foreground: 0.98 0 0;
+    --border: 0.9 0 0;
+    --input: 0.9 0 0;
+    --ring: 0.4 0 0;
+  }
+
+  .dark {
+    /* Monochromatic grayscale palette - Dark mode */
+    --background: 0.1 0 0; /* Near black */
+    --foreground: 0.95 0 0; /* Off-white */
+    --card: 0.15 0 0; /* Dark gray */
+    --card-foreground: 0.95 0 0;
+    --popover: 0.12 0 0;
+    --popover-foreground: 0.95 0 0;
+    --primary: 0.85 0 0; /* Light gray */
+    --primary-foreground: 0.15 0 0;
+    --secondary: 0.2 0 0; /* Dark gray */
+    --secondary-foreground: 0.95 0 0;
+    --muted: 0.18 0 0;
+    --muted-foreground: 0.6 0 0; /* Medium gray */
+    --accent: 0.25 0 0;
+    --accent-foreground: 0.95 0 0;
+    --destructive: 0.45 0.15 0;
+    --destructive-foreground: 0.95 0 0;
+    --border: 0.25 0 0;
+    --input: 0.25 0 0;
+    --ring: 0.5 0 0;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground rounded-full;
+    opacity: 0.3;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    opacity: 0.5;
+  }
+}
+
+@layer utilities {
+  /* Gradient text utilities */
+  .gradient-text {
+    @apply bg-gradient-to-r from-foreground via-muted-foreground to-foreground bg-clip-text text-transparent;
+  }
+}
