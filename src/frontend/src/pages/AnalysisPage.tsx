@@ -8,8 +8,8 @@ import ScreenRecorder from "../components/ScreenRecorder";
 import VideoGallery from "../components/VideoGallery";
 import VideoManagementPanel from "../components/VideoManagementPanel";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
-import { useIsCallerAdmin } from "../hooks/useQueries";
-import { useGetVideosByCategory } from "../hooks/useQueries";
+import { useGetVideosByCategory, useIsCallerAdmin } from "../hooks/useQueries";
+import { useSectionTracker } from "../hooks/useSectionTracker";
 
 const categories = [
   { value: VideoCategory.divisas, label: "Divisas" },
@@ -20,6 +20,7 @@ const categories = [
 ];
 
 export default function AnalysisPage() {
+  useSectionTracker("analisis");
   const { identity } = useInternetIdentity();
   const { data: isAdmin, isLoading: isLoadingAdmin } = useIsCallerAdmin();
 
@@ -37,7 +38,6 @@ export default function AnalysisPage() {
               Análisis Técnico de Mercados Financieros
             </h1>
 
-            {/* Descriptive content block */}
             <div className="max-w-3xl mx-auto space-y-8 mb-16">
               <p className="text-lg text-muted-foreground leading-relaxed">
                 Exposición de escenarios técnicos basados en la Teoría de las

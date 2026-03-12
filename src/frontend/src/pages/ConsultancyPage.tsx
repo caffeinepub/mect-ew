@@ -5,8 +5,10 @@ import ContactForm from "../components/ContactForm";
 import FormSpecificMessageManagement from "../components/FormSpecificMessageManagement";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useIsCallerAdmin } from "../hooks/useQueries";
+import { useSectionTracker } from "../hooks/useSectionTracker";
 
 export default function ConsultancyPage() {
+  useSectionTracker("consultorias");
   const { identity } = useInternetIdentity();
   const { data: isAdmin, isLoading: isLoadingAdmin } = useIsCallerAdmin();
 

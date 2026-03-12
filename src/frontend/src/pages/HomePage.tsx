@@ -1,10 +1,14 @@
+import { useSectionTracker } from "../hooks/useSectionTracker";
+
 export default function HomePage() {
+  useSectionTracker("home");
+
   return (
     <main
       className="relative w-screen bg-black overflow-hidden"
       style={{
         height: "100vh",
-        minHeight: "100dvh", // Dynamic viewport height for mobile
+        minHeight: "100dvh",
       }}
     >
       <img

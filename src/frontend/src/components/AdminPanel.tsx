@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DomainManagement from "./DomainManagement";
 import MessageManagement from "./MessageManagement";
+import SectionAnalyticsPanel from "./SectionAnalyticsPanel";
 
 export default function AdminPanel() {
   return (
@@ -8,18 +9,27 @@ export default function AdminPanel() {
       <div>
         <h2 className="text-2xl font-bold mb-2">Panel de Administración</h2>
         <p className="text-muted-foreground">
-          Gestiona todos los mensajes recibidos y configura tu dominio
-          personalizado
+          Gestiona mensajes, analíticas y el dominio personalizado
         </p>
       </div>
 
       <Tabs defaultValue="messages" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="messages">Mensajes</TabsTrigger>
-          <TabsTrigger value="domain">Dominio Personalizado</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="messages" data-ocid="admin.messages.tab">
+            Mensajes
+          </TabsTrigger>
+          <TabsTrigger value="analytics" data-ocid="admin.analytics.tab">
+            Analíticas
+          </TabsTrigger>
+          <TabsTrigger value="domain" data-ocid="admin.domain.tab">
+            Dominio
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="messages" className="mt-6">
           <MessageManagement />
+        </TabsContent>
+        <TabsContent value="analytics" className="mt-6">
+          <SectionAnalyticsPanel />
         </TabsContent>
         <TabsContent value="domain" className="mt-6">
           <DomainManagement />
