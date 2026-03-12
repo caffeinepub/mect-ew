@@ -33,44 +33,39 @@ export default function ConsultancyPage() {
             <div className="space-y-8">
               <h2 className="text-2xl font-bold">Enfoque de la Sesión</h2>
 
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <h3 className="text-base font-semibold">
-                    Análisis Estructural
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Desglose completo de los activos propuestos por el
-                    consultante mediante la Teoría de las Ondas de Elliott en
-                    múltiples temporalidades (Fractalidad).
-                  </p>
-                </div>
+              <div className="space-y-4">
+                <p className="text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground">
+                    Análisis Estructural:
+                  </span>{" "}
+                  Desglose completo de los activos propuestos por el consultante
+                  mediante la Teoría de las Ondas de Elliott en múltiples
+                  temporalidades (Fractalidad).
+                </p>
 
-                <div className="space-y-2">
-                  <h3 className="text-base font-semibold">
-                    Confluencia de Fibonacci
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Determinación técnica de zonas de retroceso, niveles de
-                    extensión y objetivos de precio.
-                  </p>
-                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground">
+                    Confluencia de Fibonacci:
+                  </span>{" "}
+                  Determinación técnica de zonas de retroceso, niveles de
+                  extensión y objetivos de precio.
+                </p>
 
-                <div className="space-y-2">
-                  <h3 className="text-base font-semibold">Hoja de Ruta</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Identificación de niveles críticos de invalidación y planteo
-                    de escenarios alternos.
-                  </p>
-                </div>
-              </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground">
+                    Hoja de Ruta:
+                  </span>{" "}
+                  Identificación de niveles críticos de invalidación y planteo
+                  de escenarios alternos.
+                </p>
 
-              <div className="space-y-2 pt-4">
                 <p className="text-muted-foreground leading-relaxed">
                   <span className="font-semibold text-foreground">
                     Formato:
                   </span>{" "}
                   Sesión individual de 60 minutos vía online.
                 </p>
+
                 <p className="text-muted-foreground leading-relaxed">
                   <span className="font-semibold text-foreground">
                     Cupos y Precios:
