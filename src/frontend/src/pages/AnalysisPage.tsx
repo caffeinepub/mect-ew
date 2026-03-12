@@ -75,8 +75,7 @@ export default function AnalysisPage() {
                   <span className="font-semibold text-foreground">Nota:</span>{" "}
                   Los contenidos expuestos tienen un propósito estrictamente
                   técnico-educativo y no constituyen recomendaciones de
-                  inversión ni asesoría financiera. La gestión de capital es
-                  responsabilidad individual del usuario.
+                  inversión.
                 </p>
               </div>
             </div>
