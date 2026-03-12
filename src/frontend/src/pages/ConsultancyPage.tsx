@@ -26,7 +26,7 @@ export default function ConsultancyPage() {
               </h1>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 Servicio de análisis para quienes requieran una visión técnica
-                sobre activos específicos de su interés.
+                sobre activos específicos.
               </p>
             </div>
 
