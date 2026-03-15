@@ -40,17 +40,16 @@ export default function ConsultancyPage() {
                   <span className="font-semibold text-foreground">
                     Análisis Estructural:
                   </span>{" "}
-                  Desglose completo de los activos propuestos por el consultante
-                  mediante la Teoría de las Ondas de Elliott en múltiples
-                  temporalidades (Fractalidad).
+                  Desglose fractal de los activos propuestos por el consultante
+                  mediante la Teoría de las Ondas de Elliott.
                 </p>
 
                 <p className="text-muted-foreground leading-relaxed">
                   <span className="font-semibold text-foreground">
                     Confluencia de Fibonacci:
                   </span>{" "}
-                  Determinación técnica de zonas de retroceso, niveles de
-                  extensión y objetivos de precio.
+                  Aplicación de ratios de Fibonacci para determinar niveles de
+                  avance y corrección en base a la estructura fractal.
                 </p>
 
                 <p className="text-muted-foreground leading-relaxed">
