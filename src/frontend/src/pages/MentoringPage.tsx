@@ -76,7 +76,7 @@ export default function MentoringPage() {
               <h1 className="text-3xl md:text-4xl font-bold">
                 Formación Integral en Mercados Financieros
               </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 Formación enfocada en el dominio de la infraestructura de los
                 mercados financieros, el análisis estructural de Dow y el
                 análisis técnico avanzado de la Teoría de las Ondas de Elliott.

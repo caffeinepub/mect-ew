@@ -14,15 +14,15 @@ import {
   Download,
   Loader2,
   Mic,
-  MicOff,
   Monitor,
   Play,
+  RefreshCw,
   Square,
   Trash2,
   Upload,
   Video,
 } from "lucide-react";
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ExternalBlob, VideoCategory } from "../backend";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useUploadVideo } from "../hooks/useQueries";
@@ -34,6 +34,31 @@ type RecordingState =
   | "uploading"
   | "success"
   | "error";
+
+interface AudioDevice {
+  deviceId: string;
+  label: string;
+}
+
+async function fetchAudioDevices(): Promise<AudioDevice[]> {
+  try {
+    const s = await navigator.mediaDevices
+      .getUserMedia({ audio: true, video: false })
+      .catch(() => null);
+    if (s) {
+      for (const t of s.getTracks()) t.stop();
+    }
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices
+      .filter((d) => d.kind === "audioinput")
+      .map((d, i) => ({
+        deviceId: d.deviceId,
+        label: d.label || `Micrófono ${i + 1}`,
+      }));
+  } catch {
+    return [];
+  }
+}
 
 export default function ScreenRecorder() {
   const { identity } = useInternetIdentity();
@@ -48,6 +73,9 @@ export default function ScreenRecorder() {
   const [errorMessage, setErrorMessage] = useState("");
   const [recordingTime, setRecordingTime] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [audioDevices, setAudioDevices] = useState<AudioDevice[]>([]);
+  const [selectedMicId, setSelectedMicId] = useState<string>("default");
+  const [loadingDevices, setLoadingDevices] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -62,6 +90,24 @@ export default function ScreenRecorder() {
     { value: VideoCategory.materiasPrimas, label: "Materias Primas" },
     { value: VideoCategory.activosDigitales, label: "Activos Digitales" },
   ];
+
+  const loadAudioDevices = useCallback(async () => {
+    setLoadingDevices(true);
+    const mics = await fetchAudioDevices();
+    setAudioDevices(mics);
+    if (mics.length > 0) {
+      setSelectedMicId((prev) =>
+        prev === "default" ? mics[0].deviceId : prev,
+      );
+    }
+    setLoadingDevices(false);
+  }, []);
+
+  useEffect(() => {
+    if (identity) {
+      loadAudioDevices();
+    }
+  }, [identity, loadAudioDevices]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
@@ -85,12 +131,33 @@ export default function ScreenRecorder() {
       chunksRef.current = [];
       recordedBlobRef.current = null;
 
-      const stream = await navigator.mediaDevices.getDisplayMedia({
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: { frameRate: 30 },
-        audio: true,
+        audio: false,
       });
 
-      streamRef.current = stream;
+      // Get selected microphone audio separately
+      let micStream: MediaStream | null = null;
+      try {
+        const audioConstraints: MediaStreamConstraints = {
+          audio:
+            selectedMicId && selectedMicId !== "default"
+              ? { deviceId: { exact: selectedMicId } }
+              : true,
+          video: false,
+        };
+        micStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
+      } catch {
+        // Proceed without audio if mic access fails
+      }
+
+      // Combine screen video + mic audio tracks
+      const tracks = [
+        ...screenStream.getVideoTracks(),
+        ...(micStream ? micStream.getAudioTracks() : []),
+      ];
+      const combinedStream = new MediaStream(tracks);
+      streamRef.current = combinedStream;
 
       const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
         ? "video/webm;codecs=vp9"
@@ -98,7 +165,7 @@ export default function ScreenRecorder() {
           ? "video/webm"
           : "video/mp4";
 
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      const mediaRecorder = new MediaRecorder(combinedStream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (e) => {
@@ -113,7 +180,7 @@ export default function ScreenRecorder() {
         setRecordingState("stopped");
       };
 
-      stream.getVideoTracks()[0].onended = () => {
+      screenStream.getVideoTracks()[0].onended = () => {
         if (mediaRecorderRef.current?.state === "recording") {
           stopRecording();
         }
@@ -169,7 +236,6 @@ export default function ScreenRecorder() {
         },
       );
 
-      // Send title as-is (empty string allowed — no default substitution)
       const trimmedTitle = title.trim();
 
       await uploadVideoMutation.mutateAsync({
@@ -229,7 +295,7 @@ export default function ScreenRecorder() {
         </h3>
       </div>
 
-      {/* Title & Category */}
+      {/* Title, Category & Mic */}
       {(recordingState === "idle" ||
         recordingState === "stopped" ||
         recordingState === "error") && (
@@ -243,6 +309,7 @@ export default function ScreenRecorder() {
             </Label>
             <Input
               id="rec-title"
+              data-ocid="recorder.title.input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ej: Análisis EUR/USD 25 Feb"
@@ -261,7 +328,10 @@ export default function ScreenRecorder() {
               value={category}
               onValueChange={(v) => setCategory(v as VideoCategory)}
             >
-              <SelectTrigger className="bg-background">
+              <SelectTrigger
+                className="bg-background"
+                data-ocid="recorder.category.select"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -272,6 +342,58 @@ export default function ScreenRecorder() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Microphone selector */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                <Mic className="w-4 h-4" />
+                Micrófono
+              </Label>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs gap-1 text-muted-foreground"
+                onClick={loadAudioDevices}
+                disabled={loadingDevices}
+                data-ocid="recorder.refresh_mic.button"
+              >
+                <RefreshCw
+                  className={`w-3 h-3 ${loadingDevices ? "animate-spin" : ""}`}
+                />
+                Actualizar
+              </Button>
+            </div>
+
+            {audioDevices.length > 0 ? (
+              <Select value={selectedMicId} onValueChange={setSelectedMicId}>
+                <SelectTrigger
+                  className="bg-background"
+                  data-ocid="recorder.mic.select"
+                >
+                  <SelectValue placeholder="Seleccionar micrófono" />
+                </SelectTrigger>
+                <SelectContent>
+                  {audioDevices.map((d) => (
+                    <SelectItem key={d.deviceId} value={d.deviceId}>
+                      {d.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {loadingDevices
+                  ? "Buscando micrófonos..."
+                  : 'No se detectaron micrófonos. Hacé clic en "Actualizar" para intentar de nuevo.'}
+              </p>
+            )}
+
+            <p className="text-xs text-muted-foreground">
+              Si no ves tu micrófono, verificá que el navegador tenga permiso de
+              acceso al audio.
+            </p>
           </div>
         </div>
       )}
@@ -335,7 +457,11 @@ export default function ScreenRecorder() {
       {/* Actions */}
       <div className="flex flex-wrap gap-2">
         {recordingState === "idle" && (
-          <Button onClick={startRecording} className="gap-2">
+          <Button
+            onClick={startRecording}
+            className="gap-2"
+            data-ocid="recorder.start.button"
+          >
             <Video className="w-4 h-4" />
             Iniciar Grabación
           </Button>
@@ -346,6 +472,7 @@ export default function ScreenRecorder() {
             onClick={stopRecording}
             variant="destructive"
             className="gap-2"
+            data-ocid="recorder.stop.button"
           >
             <Square className="w-4 h-4" />
             Detener Grabación
@@ -354,7 +481,11 @@ export default function ScreenRecorder() {
 
         {recordingState === "stopped" && (
           <>
-            <Button onClick={handleUpload} className="gap-2">
+            <Button
+              onClick={handleUpload}
+              className="gap-2"
+              data-ocid="recorder.upload.button"
+            >
               <Upload className="w-4 h-4" />
               Subir Video
             </Button>
@@ -362,6 +493,7 @@ export default function ScreenRecorder() {
               onClick={handleDownload}
               variant="outline"
               className="gap-2"
+              data-ocid="recorder.download.button"
             >
               <Download className="w-4 h-4" />
               Descargar
@@ -370,6 +502,7 @@ export default function ScreenRecorder() {
               onClick={handleDiscard}
               variant="ghost"
               className="gap-2 text-destructive hover:text-destructive"
+              data-ocid="recorder.discard.button"
             >
               <Trash2 className="w-4 h-4" />
               Descartar
@@ -378,13 +511,23 @@ export default function ScreenRecorder() {
         )}
 
         {recordingState === "error" && (
-          <Button onClick={handleRetry} variant="outline" className="gap-2">
+          <Button
+            onClick={handleRetry}
+            variant="outline"
+            className="gap-2"
+            data-ocid="recorder.retry.button"
+          >
             Reintentar
           </Button>
         )}
 
         {recordingState === "success" && (
-          <Button onClick={handleDiscard} variant="outline" className="gap-2">
+          <Button
+            onClick={handleDiscard}
+            variant="outline"
+            className="gap-2"
+            data-ocid="recorder.new.button"
+          >
             Nueva Grabación
           </Button>
         )}

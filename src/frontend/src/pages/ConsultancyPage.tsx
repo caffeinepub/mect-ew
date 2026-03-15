@@ -26,7 +26,7 @@ export default function ConsultancyPage() {
               <h1 className="text-3xl md:text-4xl font-bold">
                 Consultorías Técnicas
               </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 Servicio de análisis para quienes requieran una visión técnica
                 sobre activos específicos.
               </p>

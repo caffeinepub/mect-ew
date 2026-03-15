@@ -39,7 +39,7 @@ export default function AnalysisPage() {
             </h1>
 
             <div className="max-w-3xl mx-auto space-y-8 mb-16">
-              <p className="text-lg text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 Exposición de escenarios técnicos basados en la Teoría de las
                 Ondas de Elliott. Estos reportes detallan la arquitectura del
                 precio en activos seleccionados, permitiendo una lectura
@@ -59,8 +59,8 @@ export default function AnalysisPage() {
                   <span className="font-semibold text-foreground">
                     Proyecciones de Fibonacci:
                   </span>{" "}
-                  Aplicación de ratios de Fibonacci para delimitar zonas de alta
-                  probabilidad para la finalización de estructuras.
+                  Aplicación de ratios de Fibonacci para determinar niveles de
+                  desarrollo en estructuras fractales de impulso y corrección.
                 </p>
 
                 <p className="text-muted-foreground leading-relaxed">
