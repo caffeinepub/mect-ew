@@ -51,7 +51,7 @@ export default function AnalysisPage() {
                   <span className="font-semibold text-foreground">
                     Fase del Ciclo:
                   </span>{" "}
-                  Identificación de estructuras de impulso y estructuras de
+                  Identificación de estructuras fractales de impulso y
                   corrección en desarrollo.
                 </p>
 
