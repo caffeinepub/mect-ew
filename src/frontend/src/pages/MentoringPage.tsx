@@ -156,14 +156,6 @@ export default function MentoringPage() {
                 </p>
                 <p>
                   <span className="font-semibold text-foreground">
-                    Dinámica de Clase:
-                  </span>{" "}
-                  Las sesiones no se graban para priorizar la interacción 1:1,
-                  permitiendo repasar cualquier temática no comprendida las
-                  veces que sea necesario.
-                </p>
-                <p>
-                  <span className="font-semibold text-foreground">
                     Cupos y Precios:
                   </span>{" "}
                   Consultar disponibilidad y aranceles de forma privada.
