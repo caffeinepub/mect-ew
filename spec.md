@@ -1,11 +1,22 @@
-# Specification
+# MECT EW
 
-## Summary
-**Goal:** Display geographic view breakdown data for all existing video views in the admin Video Management Panel, including views recorded before geographic tracking was introduced.
+## Current State
+Las visitas por sección se registran en el hook `useSectionTracker`, pero la lógica actual solo graba la visita en el cleanup del useEffect (al salir de la página). Si el usuario cierra el navegador, navega a una URL externa, o llega desde otro servidor, el evento de salida nunca se dispara y la visita no se guarda.
 
-**Planned changes:**
-- Update the backend (`main.mo`) geographic view query to return all view records regardless of whether they have country data, including records with empty or null country fields.
-- Update `VideoManagementPanel.tsx` to display the geographic breakdown panel for any video with existing view records, grouping entries with missing/empty/null country values under an "Unknown" label.
-- Ensure the breakdown list includes "Unknown" entries sorted by view count descending alongside known countries.
+## Requested Changes (Diff)
 
-**User-visible outcome:** Admin users can now see the geographic breakdown panel for videos that already had recorded views before location tracking was added, with views that have no country data shown as "Unknown" in the breakdown list.
+### Add
+- Registro de visitas en el momento de **entrada** (después de 4 segundos de permanencia), no de salida
+- Listener de `visibilitychange` para capturar visitas cuando el usuario cambia de pestaña o cierra el navegador
+- API de geolocalización con fallback (ipapi.co → api.country.is)
+
+### Modify
+- `useSectionTracker.ts`: lógica reescrita para registrar al entrar en lugar de al salir
+
+### Remove
+- Lógica de registro en cleanup del useEffect (causaba pérdida de visitas)
+
+## Implementation Plan
+1. Reescribir `useSectionTracker` con timer de entrada (4 segundos)
+2. Agregar listener `visibilitychange` como respaldo
+3. Agregar API de geolocalización secundaria como fallback
