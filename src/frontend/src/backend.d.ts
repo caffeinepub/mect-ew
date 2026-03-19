@@ -50,6 +50,12 @@ export interface VideoViewRecord {
     country: CountryInfo;
     timestamp: Time;
 }
+export interface SectionVisit {
+    section: string;
+    country: CountryInfo;
+    duration: bigint;
+    timestamp: Time;
+}
 export interface StoredMessage {
     id: string;
     status: MessageStatus;
@@ -167,6 +173,7 @@ export interface backendInterface {
     getMessages(formType: FormType | null): Promise<Array<StoredMessage>>;
     getPendingVideos(): Promise<Array<VideoMeta>>;
     getRecordingState(): Promise<boolean>;
+    getSectionVisitRecords(): Promise<Array<SectionVisit>>;
     getThumbnailMeta(thumbnailId: string): Promise<ThumbnailMeta | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getVideoMeta(videoId: string): Promise<PublicVideoMeta | null>;
@@ -178,6 +185,7 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     moveVideoToCategory(videoId: string, newCategoryText: string): Promise<void>;
     publishPendingVideo(pendingVideoId: string): Promise<string>;
+    recordSectionVisit(section: string, country: CountryInfo, duration: bigint): Promise<void>;
     recordView(videoId: string, country: CountryInfo): Promise<void>;
     replyToMessage(messageId: string, replyText: string): Promise<void>;
     retryVerification(): Promise<void>;

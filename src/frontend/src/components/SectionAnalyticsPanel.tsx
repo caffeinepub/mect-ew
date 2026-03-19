@@ -1,13 +1,11 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { BarChart2, Clock, Globe, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
-import {
-  type SectionVisit,
-  getSectionVisits,
-} from "../hooks/useSectionTracker";
+import { useQuery } from "@tanstack/react-query";
+import { BarChart2, Clock, Globe, Loader2 } from "lucide-react";
+import { useMemo } from "react";
+import type { SectionVisit } from "../backend";
+import { useActor } from "../hooks/useActor";
 
 const SECTION_LABELS: Record<string, string> = {
   home: "Inicio",
@@ -25,8 +23,8 @@ function formatDuration(seconds: number): string {
   return s > 0 ? `${m}m ${s}s` : `${m}m`;
 }
 
-function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString("es-ES", {
+function formatDate(timestamp: bigint): string {
+  return new Date(Number(timestamp) / 1_000_000).toLocaleDateString("es-ES", {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
@@ -35,10 +33,18 @@ function formatDate(timestamp: number): string {
 }
 
 export default function SectionAnalyticsPanel() {
-  const [tick, setTick] = useState(0);
+  const { actor, isFetching: actorFetching } = useActor();
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: tick is intentional refresh signal
-  const visits = useMemo(() => getSectionVisits(), [tick]);
+  const { data: visits = [], isLoading } = useQuery<SectionVisit[]>({
+    queryKey: ["sectionVisits"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getSectionVisitRecords();
+    },
+    enabled: !!actor && !actorFetching,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+  });
 
   const sectionStats = useMemo(() => {
     const map: Record<
@@ -54,8 +60,8 @@ export default function SectionAnalyticsPanel() {
         map[visit.section] = { count: 0, totalDuration: 0, countries: {} };
       }
       map[visit.section].count++;
-      map[visit.section].totalDuration += visit.duration;
-      const key = `${visit.countryCode}|${visit.country}`;
+      map[visit.section].totalDuration += Number(visit.duration);
+      const key = `${visit.country.code}|${visit.country.name}`;
       map[visit.section].countries[key] =
         (map[visit.section].countries[key] || 0) + 1;
     }
@@ -80,9 +86,13 @@ export default function SectionAnalyticsPanel() {
     [visits],
   );
 
-  function handleClear() {
-    localStorage.removeItem("mectew_section_visits");
-    setTick((n) => n + 1);
+  if (isLoading) {
+    return (
+      <div className="text-center py-16 text-muted-foreground">
+        <Loader2 className="w-10 h-10 mx-auto mb-4 opacity-50 animate-spin" />
+        <p>Cargando analíticas...</p>
+      </div>
+    );
   }
 
   if (visits.length === 0) {
@@ -102,21 +112,10 @@ export default function SectionAnalyticsPanel() {
 
   return (
     <div className="space-y-8" data-ocid="analytics.panel">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {visits.length} visita{visits.length !== 1 ? "s" : ""} registrada
-          {visits.length !== 1 ? "s" : ""}
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleClear}
-          data-ocid="analytics.delete_button"
-        >
-          <Trash2 className="w-4 h-4 mr-2" />
-          Borrar datos
-        </Button>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        {visits.length} visita{visits.length !== 1 ? "s" : ""} registrada
+        {visits.length !== 1 ? "s" : ""}
+      </p>
 
       <div>
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -145,14 +144,24 @@ export default function SectionAnalyticsPanel() {
                 <div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                     <Globe className="w-4 h-4" />
-                    Países
+                    Regiones
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {stat.countries.slice(0, 8).map((c) => (
-                      <Badge key={c.code} variant="outline" className="text-xs">
-                        {c.name} ({c.count})
-                      </Badge>
-                    ))}
+                    {stat.countries.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">
+                        Sin datos de región
+                      </span>
+                    ) : (
+                      stat.countries.slice(0, 8).map((c) => (
+                        <Badge
+                          key={c.code}
+                          variant="outline"
+                          className="text-xs"
+                        >
+                          {c.name} ({c.count})
+                        </Badge>
+                      ))
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -177,11 +186,11 @@ export default function SectionAnalyticsPanel() {
                   {SECTION_LABELS[visit.section] || visit.section}
                 </span>
                 <Badge variant="outline" className="text-xs">
-                  {visit.country}
+                  {visit.country.name}
                 </Badge>
               </div>
               <div className="flex items-center gap-3 text-muted-foreground">
-                <span>{formatDuration(visit.duration)}</span>
+                <span>{formatDuration(Number(visit.duration))}</span>
                 <span>{formatDate(visit.timestamp)}</span>
               </div>
             </div>

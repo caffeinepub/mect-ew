@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useActor } from "./useActor";
 import { useInternetIdentity } from "./useInternetIdentity";
 import { useIsCallerAdmin } from "./useQueries";
 
@@ -9,9 +10,6 @@ export interface SectionVisit {
   timestamp: number;
   duration: number;
 }
-
-const STORAGE_KEY = "mectew_section_visits";
-const MAX_RECORDS = 500;
 
 let cachedCountry: { country: string; countryCode: string } | null = null;
 let fetchingCountry = false;
@@ -51,50 +49,51 @@ async function getVisitorCountry(): Promise<{
   });
 }
 
-export function getSectionVisits(): SectionVisit[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveSectionVisit(visit: SectionVisit) {
-  const visits = getSectionVisits();
-  visits.push(visit);
-  const trimmed = visits.slice(-MAX_RECORDS);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
-}
-
 export function useSectionTracker(sectionName: string) {
   const { identity } = useInternetIdentity();
   const { data: isAdmin } = useIsCallerAdmin();
+  const { actor } = useActor();
   const enterTimeRef = useRef<number>(Date.now());
+  const actorRef = useRef(actor);
+  const isAdminRef = useRef(isAdmin);
+
+  useEffect(() => {
+    actorRef.current = actor;
+  }, [actor]);
+
+  useEffect(() => {
+    isAdminRef.current = isAdmin;
+  }, [isAdmin]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional
   useEffect(() => {
     if (isAdmin) return;
 
     enterTimeRef.current = Date.now();
-    let countryInfo = cachedCountry;
 
-    getVisitorCountry().then((info) => {
-      countryInfo = info;
-    });
+    // Pre-fetch country so it's ready when user leaves
+    getVisitorCountry().catch(() => {});
 
     return () => {
+      if (isAdminRef.current) return;
+
       const duration = Math.round((Date.now() - enterTimeRef.current) / 1000);
       if (duration < 2) return;
 
-      const visit: SectionVisit = {
-        section: sectionName,
-        country: countryInfo?.country || "Desconocido",
-        countryCode: countryInfo?.countryCode || "XX",
-        timestamp: Date.now(),
-        duration,
-      };
-      saveSectionVisit(visit);
+      const currentActor = actorRef.current;
+
+      getVisitorCountry().then((countryInfo) => {
+        if (!currentActor) return;
+        currentActor
+          .recordSectionVisit(
+            sectionName,
+            { code: countryInfo.countryCode, name: countryInfo.country },
+            BigInt(duration),
+          )
+          .catch((err) => {
+            console.warn("Failed to record section visit:", err);
+          });
+      });
     };
   }, [sectionName, isAdmin, identity]);
 }

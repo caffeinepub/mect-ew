@@ -128,6 +128,12 @@ export interface VideoViewRecord {
     country: CountryInfo;
     timestamp: Time;
 }
+export interface SectionVisit {
+    section: string;
+    country: CountryInfo;
+    duration: bigint;
+    timestamp: Time;
+}
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
@@ -271,6 +277,8 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     moveVideoToCategory(videoId: string, newCategoryText: string): Promise<void>;
     publishPendingVideo(pendingVideoId: string): Promise<string>;
+    recordSectionVisit(section: string, country: CountryInfo, duration: bigint): Promise<void>;
+    getSectionVisitRecords(): Promise<Array<SectionVisit>>;
     recordView(videoId: string, country: CountryInfo): Promise<void>;
     replyToMessage(messageId: string, replyText: string): Promise<void>;
     retryVerification(): Promise<void>;
@@ -843,6 +851,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.recordView(arg0, arg1);
+            return result;
+        }
+    }
+    async recordSectionVisit(arg0: string, arg1: CountryInfo, arg2: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.recordSectionVisit(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.recordSectionVisit(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async getSectionVisitRecords(): Promise<Array<SectionVisit>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getSectionVisitRecords();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSectionVisitRecords();
             return result;
         }
     }

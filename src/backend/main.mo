@@ -158,6 +158,13 @@ actor {
     timestamp : Time.Time;
   };
 
+  public type SectionVisit = {
+    section : Text;
+    country : CountryInfo;
+    duration : Nat;
+    timestamp : Time.Time;
+  };
+
   let videos = Map.empty<Text, VideoMeta>();
   let pendingVideos = Map.empty<Text, VideoMeta>();
   let messages = Map.empty<Text, StoredMessage>();
@@ -170,6 +177,9 @@ actor {
 
   let videoViewCounts = Map.empty<Text, Nat>();
   let videoViewRecords = Map.empty<Text, [VideoViewRecord]>();
+
+  let sectionVisitStore = Map.empty<Nat, SectionVisit>();
+  var sectionVisitCounter : Nat = 0;
 
   var domainVerificationToken : ?Text = ?"INITIAL_VERIFICATION_TOKEN";
   var customDomainStatus : {
@@ -582,6 +592,28 @@ actor {
     };
   };
 
+  // Public: any visitor can record a section visit (admin visits are ignored server-side)
+  public shared ({ caller }) func recordSectionVisit(section : Text, country : CountryInfo, duration : Nat) : async () {
+    // Skip admin visits
+    if (AccessControl.isAdmin(accessControlState, caller)) { return };
+    sectionVisitCounter += 1;
+    let visit : SectionVisit = {
+      section = section;
+      country = country;
+      duration = duration;
+      timestamp = Time.now();
+    };
+    sectionVisitStore.add(sectionVisitCounter, visit);
+  };
+
+  // Admin-only: retrieve all section visits
+  public query ({ caller }) func getSectionVisitRecords() : async [SectionVisit] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Acceso no autorizado: Solo administradores pueden ver visitas por sección");
+    };
+    sectionVisitStore.values().toArray();
+  };
+
   public shared ({ caller }) func streamVideo(videoId : Text, country : ?CountryInfo) : async ?Storage.ExternalBlob {
     switch (videos.get(videoId)) {
       case (null) { null };
@@ -911,4 +943,3 @@ actor {
     };
   };
 };
-

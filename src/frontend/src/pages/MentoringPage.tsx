@@ -123,8 +123,8 @@ export default function MentoringPage() {
                   <span className="font-semibold text-foreground">
                     Duración y Frecuencia:
                   </span>{" "}
-                  Formación de 12 meses con sesiones de 60 minutos, dos veces
-                  por semana.
+                  Formación de 12 meses con 2 sesiones a la semana vía online de
+                  60 minutos.
                 </p>
                 <p>
                   <span className="font-semibold text-foreground">
