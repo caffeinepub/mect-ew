@@ -1,22 +1,21 @@
 # MECT EW
 
 ## Current State
-Las visitas por sección se registran en el hook `useSectionTracker`, pero la lógica actual solo graba la visita en el cleanup del useEffect (al salir de la página). Si el usuario cierra el navegador, navega a una URL externa, o llega desde otro servidor, el evento de salida nunca se dispara y la visita no se guarda.
+El formulario de subida manual de videos (`ManualVideoUpload.tsx`) usa `Time.now()` del backend como timestamp, sin permitir al admin ingresar una fecha personalizada. El backend `uploadManualVideo` no acepta timestamp externo.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Registro de visitas en el momento de **entrada** (después de 4 segundos de permanencia), no de salida
-- Listener de `visibilitychange` para capturar visitas cuando el usuario cambia de pestaña o cierra el navegador
-- API de geolocalización con fallback (ipapi.co → api.country.is)
+- Campo de fecha y hora en el formulario de subida manual de videos (visible solo para el admin).
+- Nueva función backend `uploadManualVideoWithDate` que acepta un timestamp personalizado (en nanosegundos) además de los campos existentes.
 
 ### Modify
-- `useSectionTracker.ts`: lógica reescrita para registrar al entrar en lugar de al salir
+- `ManualVideoUpload.tsx`: agregar input tipo `datetime-local` con label "Fecha original de publicación (opcional)". Si se completa, ese timestamp se envía al backend; si está vacío, se usa la fecha actual.
+- El campo de fecha debe mostrar un hint explicando que sirve para restaurar la fecha original del análisis.
 
 ### Remove
-- Lógica de registro en cleanup del useEffect (causaba pérdida de visitas)
+- Nada.
 
 ## Implementation Plan
-1. Reescribir `useSectionTracker` con timer de entrada (4 segundos)
-2. Agregar listener `visibilitychange` como respaldo
-3. Agregar API de geolocalización secundaria como fallback
+1. Agregar función `uploadManualVideoWithDate` en `main.mo` que acepta `customTimestamp: ?Int`.
+2. Actualizar `ManualVideoUpload.tsx` para incluir el campo de fecha/hora y usarlo al llamar al backend.

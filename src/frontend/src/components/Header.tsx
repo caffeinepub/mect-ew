@@ -75,15 +75,7 @@ export default function Header() {
             <img
               src="/assets/Logo-3.png"
               alt="MECT EW Logo"
-              className="h-6 w-auto object-contain"
-              style={{
-                maxWidth: "100%",
-                height: "1.5rem",
-              }}
-              onError={(e) => {
-                console.error("Logo failed to load");
-                e.currentTarget.style.display = "none";
-              }}
+              className="h-8 w-auto object-contain"
             />
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold tracking-tight text-white">

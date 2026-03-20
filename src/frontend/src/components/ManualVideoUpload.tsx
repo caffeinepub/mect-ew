@@ -14,8 +14,8 @@ import { FileVideo, Loader2, Upload, X } from "lucide-react";
 import type React from "react";
 import { useRef, useState } from "react";
 import { ExternalBlob, VideoCategory, VideoFileType } from "../backend";
+import { useActor } from "../hooks/useActor";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
-import { useUploadManualVideo } from "../hooks/useQueries";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
 
@@ -34,9 +34,15 @@ const categoryOptions = [
   { value: VideoCategory.activosDigitales, label: "Activos Digitales" },
 ];
 
+// Convert a datetime-local string ("YYYY-MM-DDTHH:mm") to nanoseconds (bigint)
+function dateStringToNanoseconds(dateStr: string): bigint {
+  const ms = new Date(dateStr).getTime();
+  return BigInt(ms) * 1_000_000n;
+}
+
 export default function ManualVideoUpload() {
   const { identity } = useInternetIdentity();
-  const uploadMutation = useUploadManualVideo();
+  const { actor } = useActor();
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<VideoCategory>(
@@ -47,6 +53,7 @@ export default function ManualVideoUpload() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [customDate, setCustomDate] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -68,11 +75,10 @@ export default function ManualVideoUpload() {
     }
 
     setSelectedFile(file);
-    // Do NOT auto-fill title from filename — title stays blank unless user types one
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !actor) return;
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -89,27 +95,31 @@ export default function ManualVideoUpload() {
       );
 
       const fileType = ACCEPTED_TYPES[selectedFile.type] ?? VideoFileType.mp4;
-
-      // Send title as-is (empty string allowed — no default substitution)
       const trimmedTitle = title.trim();
 
-      await uploadMutation.mutateAsync({
-        title: trimmedTitle,
+      // Use custom date if provided, otherwise null (backend uses current time)
+      const customTimestamp: bigint | null = customDate
+        ? dateStringToNanoseconds(customDate)
+        : null;
+
+      await actor.uploadManualVideoWithDate(
+        trimmedTitle,
         blob,
-        fileSize: BigInt(selectedFile.size),
+        BigInt(selectedFile.size),
         category,
         fileType,
-      });
+        customTimestamp,
+      );
 
       setUploadSuccess(true);
       setSelectedFile(null);
       setTitle("");
+      setCustomDate("");
       setUploadProgress(100);
       if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (err: any) {
-      setErrorMessage(
-        `Error al subir el video: ${err.message || "Error desconocido"}`,
-      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error desconocido";
+      setErrorMessage(`Error al subir el video: ${msg}`);
     } finally {
       setIsUploading(false);
     }
@@ -118,6 +128,7 @@ export default function ManualVideoUpload() {
   const handleClear = () => {
     setSelectedFile(null);
     setTitle("");
+    setCustomDate("");
     setErrorMessage("");
     setUploadSuccess(false);
     setUploadProgress(0);
@@ -192,6 +203,29 @@ export default function ManualVideoUpload() {
         />
         <p className="text-xs text-muted-foreground">
           Opcional — dejá en blanco para guardar sin título.
+        </p>
+      </div>
+
+      {/* Custom original date */}
+      <div className="space-y-1.5">
+        <Label
+          htmlFor="custom-date"
+          className="text-sm font-medium text-foreground"
+        >
+          Fecha original de publicación
+        </Label>
+        <Input
+          id="custom-date"
+          type="datetime-local"
+          value={customDate}
+          onChange={(e) => setCustomDate(e.target.value)}
+          className="bg-background"
+          disabled={isUploading}
+        />
+        <p className="text-xs text-muted-foreground">
+          Opcional — completá esta fecha si querés restaurar la fecha exacta en
+          que publicaste el análisis originalmente. Si lo dejás vacío, se usará
+          la fecha de hoy.
         </p>
       </div>
 

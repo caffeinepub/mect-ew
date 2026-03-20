@@ -3,6 +3,7 @@ import Iter "mo:core/Iter";
 import Time "mo:core/Time";
 import Text "mo:core/Text";
 import Nat "mo:core/Nat";
+import Int "mo:core/Int";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Array "mo:core/Array";
@@ -190,6 +191,82 @@ actor {
   } = #notConfigured;
   var domainLastVerificationAttempt : ?Time.Time = null;
 
+  // ============================================================
+  // STABLE STORAGE - persists all state across canister upgrades
+  // ============================================================
+  stable var _stableAdminAssigned : Bool = false;
+  stable var _stableUserRoles : [(Principal, AccessControl.UserRole)] = [];
+  stable var _stableVideos : [(Text, VideoMeta)] = [];
+  stable var _stableMessages : [(Text, StoredMessage)] = [];
+  stable var _stableThumbnails : [(Text, ThumbnailMeta)] = [];
+  stable var _stableUserProfiles : [(Principal, UserProfile)] = [];
+  stable var _stableMessageCounter : Nat = 0;
+  stable var _stableVideoCounter : Nat = 0;
+  stable var _stableThumbnailCount : Nat = 0;
+  stable var _stableVideoViewCounts : [(Text, Nat)] = [];
+  stable var _stableVideoViewRecords : [(Text, [VideoViewRecord])] = [];
+  stable var _stableSectionVisits : [(Nat, SectionVisit)] = [];
+  stable var _stableSectionVisitCounter : Nat = 0;
+
+  // Save all state before each upgrade
+  system func preupgrade() {
+    _stableAdminAssigned := accessControlState.adminAssigned;
+    _stableUserRoles := accessControlState.userRoles.entries().toArray();
+    _stableVideos := videos.entries().toArray();
+    _stableMessages := messages.entries().toArray();
+    _stableThumbnails := thumbnails.entries().toArray();
+    _stableUserProfiles := userProfiles.entries().toArray();
+    _stableMessageCounter := messageCounter;
+    _stableVideoCounter := videoCounter;
+    _stableThumbnailCount := thumbnailCount;
+    _stableVideoViewCounts := videoViewCounts.entries().toArray();
+    _stableVideoViewRecords := videoViewRecords.entries().toArray();
+    _stableSectionVisits := sectionVisitStore.entries().toArray();
+    _stableSectionVisitCounter := sectionVisitCounter;
+  };
+
+  // Restore all state after each upgrade
+  system func postupgrade() {
+    accessControlState.adminAssigned := _stableAdminAssigned;
+    for ((p, r) in _stableUserRoles.vals()) {
+      accessControlState.userRoles.add(p, r);
+    };
+    for ((k, v) in _stableVideos.vals()) {
+      videos.add(k, v);
+    };
+    for ((k, v) in _stableMessages.vals()) {
+      messages.add(k, v);
+    };
+    for ((k, v) in _stableThumbnails.vals()) {
+      thumbnails.add(k, v);
+    };
+    for ((k, v) in _stableUserProfiles.vals()) {
+      userProfiles.add(k, v);
+    };
+    messageCounter := _stableMessageCounter;
+    videoCounter := _stableVideoCounter;
+    thumbnailCount := _stableThumbnailCount;
+    for ((k, v) in _stableVideoViewCounts.vals()) {
+      videoViewCounts.add(k, v);
+    };
+    for ((k, v) in _stableVideoViewRecords.vals()) {
+      videoViewRecords.add(k, v);
+    };
+    for ((k, v) in _stableSectionVisits.vals()) {
+      sectionVisitStore.add(k, v);
+    };
+    sectionVisitCounter := _stableSectionVisitCounter;
+    // Clear temporary stable storage after restore to free memory
+    _stableUserRoles := [];
+    _stableVideos := [];
+    _stableMessages := [];
+    _stableThumbnails := [];
+    _stableUserProfiles := [];
+    _stableVideoViewCounts := [];
+    _stableVideoViewRecords := [];
+    _stableSectionVisits := [];
+  };
+
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Acceso no autorizado: Solo usuarios pueden acceder a perfiles");
@@ -348,6 +425,44 @@ actor {
       id = id;
       title = title;
       timestamp = Time.now();
+      fileSize = fileSize;
+      blob = blob;
+      category = category;
+      sourceType = #uploaded;
+      thumbnail = null;
+      thumbnailUrl = null;
+      customThumbnail = null;
+    };
+
+    videos.add(id, videoMeta);
+    id;
+  };
+
+  // Upload manual video with a custom timestamp (for restoring original publication dates)
+  public shared ({ caller }) func uploadManualVideoWithDate(
+    title : Text,
+    blob : Storage.ExternalBlob,
+    fileSize : Nat,
+    category : VideoCategory,
+    _fileType : VideoFileType,
+    customTimestamp : ?Int,
+  ) : async Text {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Acceso no autorizado: Solo administradores pueden subir videos manualmente");
+    };
+
+    videoCounter += 1;
+    let id = "video_" # videoCounter.toText();
+
+    let ts : Time.Time = switch (customTimestamp) {
+      case (null) { Time.now() };
+      case (?t) { t };
+    };
+
+    let videoMeta : VideoMeta = {
+      id = id;
+      title = title;
+      timestamp = ts;
       fileSize = fileSize;
       blob = blob;
       category = category;
@@ -547,7 +662,6 @@ actor {
     videos.get(videoId);
   };
 
-  // Admin-only: view records contain geographic tracking data (country, timestamp) for all viewers
   public query ({ caller }) func getViewRecords(videoId : Text) : async [VideoViewRecord] {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Acceso no autorizado: Solo administradores pueden ver registros de visualizaciones");
@@ -558,7 +672,6 @@ actor {
     };
   };
 
-  // Open to all callers: recording a view is a public action triggered by watching a video
   public shared ({ caller }) func recordView(videoId : Text, country : CountryInfo) : async () {
     let viewRecord : VideoViewRecord = {
       country = country;
@@ -574,7 +687,6 @@ actor {
     videoViewRecords.add(videoId, updatedRecords);
   };
 
-  // Open to all callers: bulk recording views is a public action triggered by watching videos
   public shared ({ caller }) func bulkRecordViews(viewEntries : [(Text, CountryInfo)]) : async () {
     for ((videoId, country) in viewEntries.values()) {
       let viewRecord : VideoViewRecord = {
@@ -592,9 +704,7 @@ actor {
     };
   };
 
-  // Public: any visitor can record a section visit (admin visits are ignored server-side)
   public shared ({ caller }) func recordSectionVisit(section : Text, country : CountryInfo, duration : Nat) : async () {
-    // Skip admin visits
     if (AccessControl.isAdmin(accessControlState, caller)) { return };
     sectionVisitCounter += 1;
     let visit : SectionVisit = {
@@ -606,7 +716,6 @@ actor {
     sectionVisitStore.add(sectionVisitCounter, visit);
   };
 
-  // Admin-only: retrieve all section visits
   public query ({ caller }) func getSectionVisitRecords() : async [SectionVisit] {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Acceso no autorizado: Solo administradores pueden ver visitas por sección");
@@ -907,18 +1016,15 @@ actor {
       Runtime.trap("No autorizado: Solo administradores pueden acceder");
     };
 
-    // Only reverify if current domain is not verified
     if (customDomainStatus == #verified) {
       Runtime.trap("Custom domain is already verified");
     };
 
-    // Do not recreate
     let verificationToken = switch (domainVerificationToken) {
       case (null) { Runtime.trap("No hay token de verificación disponible") };
       case (?token) { token };
     };
 
-    // GoDaddy CNAME lookup
     let godaddyUrl = "https://dns.google/resolve?name=mectelliottwave.com&type=CNAME";
     ignore await OutCall.httpGetRequest(godaddyUrl, [], transform);
 
@@ -943,4 +1049,3 @@ actor {
     };
   };
 };
-

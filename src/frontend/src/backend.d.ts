@@ -148,6 +148,11 @@ export enum VideoFileType {
     mp4 = "mp4",
     webm = "webm"
 }
+export enum ImageFormat {
+    jpg = "jpg",
+    png = "png",
+    webp = "webp"
+}
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bulkDeleteVideos(videoIds: Array<string>): Promise<void>;
@@ -202,6 +207,7 @@ export interface backendInterface {
         width: bigint;
     }, fileSize: bigint): Promise<string>;
     uploadManualVideo(title: string, blob: ExternalBlob, fileSize: bigint, category: VideoCategory, _fileType: VideoFileType): Promise<string>;
+    uploadManualVideoWithDate(title: string, blob: ExternalBlob, fileSize: bigint, category: VideoCategory, _fileType: VideoFileType, customTimestamp: bigint | null): Promise<string>;
     uploadThumbnail(videoId: string, imageUrl: string, thumbnailType: ThumbnailType, dimensions: {
         height: bigint;
         width: bigint;

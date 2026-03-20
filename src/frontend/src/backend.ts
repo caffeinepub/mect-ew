@@ -295,6 +295,7 @@ export interface backendInterface {
         width: bigint;
     }, fileSize: bigint): Promise<string>;
     uploadManualVideo(title: string, blob: ExternalBlob, fileSize: bigint, category: VideoCategory, _fileType: VideoFileType): Promise<string>;
+    uploadManualVideoWithDate(title: string, blob: ExternalBlob, fileSize: bigint, category: VideoCategory, _fileType: VideoFileType, customTimestamp: bigint | null): Promise<string>;
     uploadThumbnail(videoId: string, imageUrl: string, thumbnailType: ThumbnailType, dimensions: {
         height: bigint;
         width: bigint;
@@ -1050,6 +1051,21 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.uploadManualVideo(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), arg2, to_candid_VideoCategory_n21(this._uploadFile, this._downloadFile, arg3), to_candid_VideoFileType_n52(this._uploadFile, this._downloadFile, arg4));
+            return result;
+        }
+    }
+    async uploadManualVideoWithDate(arg0: string, arg1: ExternalBlob, arg2: bigint, arg3: VideoCategory, arg4: VideoFileType, arg5: bigint | null): Promise<string> {
+        const candid_ts = arg5 !== null ? [arg5] : [];
+        if (this.processError) {
+            try {
+                const result = await this.actor.uploadManualVideoWithDate(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), arg2, to_candid_VideoCategory_n21(this._uploadFile, this._downloadFile, arg3), to_candid_VideoFileType_n52(this._uploadFile, this._downloadFile, arg4), candid_ts);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.uploadManualVideoWithDate(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), arg2, to_candid_VideoCategory_n21(this._uploadFile, this._downloadFile, arg3), to_candid_VideoFileType_n52(this._uploadFile, this._downloadFile, arg4), candid_ts);
             return result;
         }
     }
