@@ -68,7 +68,8 @@ export default function IcpPaymentWidget({ serviceType }: Props) {
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">
           Los pagos se realizan a través del token ICP desde cualquier billetera
-          compatible: NNS, Plug, Stoic u otras.
+          compatible (NNS, Plug, Stoic u otras) o Exchange Crypto (Kraken,
+          Binance, Coinbase u otros)
         </p>
 
         <div className="space-y-1">
