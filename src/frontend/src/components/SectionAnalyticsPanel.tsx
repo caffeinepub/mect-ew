@@ -1,20 +1,43 @@
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart2, Clock, Globe, Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import type { SectionVisit } from "../backend";
 import { useActor } from "../hooks/useActor";
 
 const SECTION_LABELS: Record<string, string> = {
   home: "Inicio",
+  sobre_mi: "Sobre mí",
   "sobre-mi": "Sobre mí",
+  about: "Sobre mí",
   analisis: "Análisis",
+  analysis: "Análisis",
   consultorias: "Consultorías",
+  consultancy: "Consultorías",
+  consultoría: "Consultorías",
   mentorias: "Mentorías",
+  mentoring: "Mentorías",
   contacto: "Contacto",
+  contact: "Contacto",
 };
+
+function getSectionLabel(section: string): string {
+  const key = section.toLowerCase().replace(/\s+/g, "-");
+  return SECTION_LABELS[key] ?? section;
+}
+
+const SECTION_ORDER = [
+  "home",
+  "about",
+  "sobre_mi",
+  "sobre-mi",
+  "analisis",
+  "analysis",
+  "consultorias",
+  "consultancy",
+  "mentorias",
+  "mentoring",
+  "contacto",
+  "contact",
+];
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -24,179 +47,396 @@ function formatDuration(seconds: number): string {
 }
 
 function formatDate(timestamp: bigint): string {
-  return new Date(Number(timestamp) / 1_000_000).toLocaleDateString("es-ES", {
+  const ms = Number(timestamp) / 1_000_000;
+  return new Date(ms).toLocaleString("es-ES", {
     day: "2-digit",
-    month: "short",
+    month: "2-digit",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
 }
 
+const COUNTRY_FLAGS: Record<string, string> = {
+  AR: "🇦🇷",
+  US: "🇺🇸",
+  ES: "🇪🇸",
+  MX: "🇲🇽",
+  BR: "🇧🇷",
+  CL: "🇨🇱",
+  CO: "🇨🇴",
+  PE: "🇵🇪",
+  UY: "🇺🇾",
+  PY: "🇵🇾",
+  BO: "🇧🇴",
+  VE: "🇻🇪",
+  EC: "🇪🇨",
+  GB: "🇬🇧",
+  DE: "🇩🇪",
+  FR: "🇫🇷",
+  IT: "🇮🇹",
+  CA: "🇨🇦",
+  AU: "🇦🇺",
+  JP: "🇯🇵",
+  CN: "🇨🇳",
+  IN: "🇮🇳",
+  RU: "🇷🇺",
+  ZA: "🇿🇦",
+};
+
+function getFlag(code: string): string {
+  return COUNTRY_FLAGS[code.toUpperCase()] ?? "🌐";
+}
+
+interface SectionStat {
+  section: string;
+  count: number;
+  avgDuration: number;
+  totalDuration: number;
+  countries: { code: string; name: string; count: number }[];
+}
+
 export default function SectionAnalyticsPanel() {
   const { actor, isFetching: actorFetching } = useActor();
 
-  const { data: visits = [], isLoading } = useQuery<SectionVisit[]>({
+  const {
+    data: visits,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+    dataUpdatedAt,
+  } = useQuery<SectionVisit[]>({
     queryKey: ["sectionVisits"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getSectionVisitRecords();
-    },
+    queryFn: async () => actor!.getSectionVisitRecords(),
     enabled: !!actor && !actorFetching,
     refetchInterval: 30_000,
     refetchOnWindowFocus: true,
   });
 
-  const sectionStats = useMemo(() => {
-    const map: Record<
+  const stats = useMemo((): SectionStat[] => {
+    if (!visits || visits.length === 0) return [];
+    const map = new Map<
       string,
       {
-        count: number;
-        totalDuration: number;
-        countries: Record<string, number>;
+        durations: number[];
+        countries: Map<string, { name: string; count: number }>;
       }
-    > = {};
-    for (const visit of visits) {
-      if (!map[visit.section]) {
-        map[visit.section] = { count: 0, totalDuration: 0, countries: {} };
-      }
-      map[visit.section].count++;
-      map[visit.section].totalDuration += Number(visit.duration);
-      const key = `${visit.country.code}|${visit.country.name}`;
-      map[visit.section].countries[key] =
-        (map[visit.section].countries[key] || 0) + 1;
+    >();
+
+    for (const v of visits) {
+      const key = v.section.toLowerCase();
+      if (!map.has(key)) map.set(key, { durations: [], countries: new Map() });
+      const entry = map.get(key)!;
+      entry.durations.push(Number(v.duration));
+      const cc = v.country.code.toUpperCase();
+      if (!entry.countries.has(cc))
+        entry.countries.set(cc, { name: v.country.name, count: 0 });
+      entry.countries.get(cc)!.count++;
     }
-    return Object.entries(map)
-      .sort((a, b) => b[1].count - a[1].count)
-      .map(([section, stats]) => ({
+
+    const result: SectionStat[] = [];
+    for (const [section, data] of map.entries()) {
+      const total = data.durations.reduce((a, b) => a + b, 0);
+      const countries = Array.from(data.countries.entries())
+        .map(([code, { name, count }]) => ({ code, name, count }))
+        .sort((a, b) => b.count - a.count);
+      result.push({
         section,
-        label: SECTION_LABELS[section] || section,
-        count: stats.count,
-        avgDuration: Math.round(stats.totalDuration / stats.count),
-        countries: Object.entries(stats.countries)
-          .map(([key, count]) => {
-            const [code, name] = key.split("|");
-            return { code, name, count };
-          })
-          .sort((a, b) => b.count - a.count),
-      }));
+        count: data.durations.length,
+        avgDuration: Math.round(total / data.durations.length),
+        totalDuration: total,
+        countries,
+      });
+    }
+
+    return result.sort((a, b) => {
+      const ai = SECTION_ORDER.findIndex((s) => a.section.includes(s));
+      const bi = SECTION_ORDER.findIndex((s) => b.section.includes(s));
+      if (ai === -1 && bi === -1) return b.count - a.count;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
   }, [visits]);
 
-  const recentVisits = useMemo(
-    () => [...visits].reverse().slice(0, 20),
-    [visits],
-  );
+  const totalVisits = visits?.length ?? 0;
+  const uniqueCountries = useMemo(() => {
+    if (!visits) return 0;
+    return new Set(visits.map((v) => v.country.code.toUpperCase())).size;
+  }, [visits]);
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-16 text-muted-foreground">
-        <Loader2 className="w-10 h-10 mx-auto mb-4 opacity-50 animate-spin" />
-        <p>Cargando analíticas...</p>
-      </div>
-    );
-  }
+  const recentVisits = useMemo(() => {
+    if (!visits) return [];
+    return [...visits]
+      .sort((a, b) => Number(b.timestamp - a.timestamp))
+      .slice(0, 25);
+  }, [visits]);
 
-  if (visits.length === 0) {
-    return (
-      <div
-        data-ocid="analytics.empty_state"
-        className="text-center py-16 text-muted-foreground"
-      >
-        <BarChart2 className="w-10 h-10 mx-auto mb-4 opacity-30" />
-        <p>Aún no hay visitas registradas.</p>
-        <p className="text-sm mt-1">
-          Los datos aparecerán cuando visitantes naveguen por el sitio.
-        </p>
-      </div>
-    );
-  }
+  const lastUpdated = dataUpdatedAt
+    ? new Date(dataUpdatedAt).toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
 
   return (
-    <div className="space-y-8" data-ocid="analytics.panel">
-      <p className="text-sm text-muted-foreground">
-        {visits.length} visita{visits.length !== 1 ? "s" : ""} registrada
-        {visits.length !== 1 ? "s" : ""}
-      </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-white">
+            Analíticas del Sitio
+          </h2>
+          {lastUpdated && (
+            <p className="text-xs text-gray-500 mt-0.5">
+              Actualizado a las {lastUpdated}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-700 text-gray-300 hover:border-gray-500 hover:text-white transition-colors disabled:opacity-50"
+          data-ocid="analytics.button"
+        >
+          {isFetching ? (
+            <svg
+              aria-hidden="true"
+              className="animate-spin h-3.5 w-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+          ) : (
+            <svg
+              aria-hidden="true"
+              className="h-3.5 w-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+          Actualizar
+        </button>
+      </div>
 
-      <div>
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <BarChart2 className="w-5 h-5" />
-          Visitas por Sección
-        </h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          {sectionStats.map((stat, i) => (
-            <Card key={stat.section} data-ocid={`analytics.item.${i + 1}`}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold flex items-center justify-between">
-                  {stat.label}
-                  <Badge variant="secondary">
-                    {stat.count} visita{stat.count !== 1 ? "s" : ""}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  Tiempo promedio:{" "}
-                  <span className="text-foreground font-medium">
-                    {formatDuration(stat.avgDuration)}
-                  </span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                    <Globe className="w-4 h-4" />
-                    Regiones
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {stat.countries.length === 0 ? (
-                      <span className="text-xs text-muted-foreground">
-                        Sin datos de región
+      {/* Loading */}
+      {isLoading && (
+        <div
+          className="flex items-center justify-center py-16"
+          data-ocid="analytics.loading_state"
+        >
+          <svg
+            aria-hidden="true"
+            className="animate-spin h-6 w-6 text-gray-400"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
+          </svg>
+          <span className="ml-3 text-gray-400">Cargando analíticas...</span>
+        </div>
+      )}
+
+      {/* Error */}
+      {isError && (
+        <div
+          className="border border-red-800 bg-red-950/30 p-4"
+          data-ocid="analytics.error_state"
+        >
+          <p className="text-red-400 text-sm">
+            Error al cargar analíticas: {String(error)}
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="mt-2 text-xs text-red-400 underline"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {/* Summary Cards */}
+      {!isLoading && !isError && (
+        <>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="border border-gray-800 bg-gray-900/40 p-4 text-center">
+              <p className="text-3xl font-bold text-white">{totalVisits}</p>
+              <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider">
+                Visitas Totales
+              </p>
+            </div>
+            <div className="border border-gray-800 bg-gray-900/40 p-4 text-center">
+              <p className="text-3xl font-bold text-white">{stats.length}</p>
+              <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider">
+                Secciones Visitadas
+              </p>
+            </div>
+            <div className="border border-gray-800 bg-gray-900/40 p-4 text-center">
+              <p className="text-3xl font-bold text-white">{uniqueCountries}</p>
+              <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider">
+                Países
+              </p>
+            </div>
+          </div>
+
+          {/* Empty state */}
+          {totalVisits === 0 && (
+            <div
+              className="border border-gray-800 p-12 text-center"
+              data-ocid="analytics.empty_state"
+            >
+              <svg
+                aria-hidden="true"
+                className="h-12 w-12 text-gray-700 mx-auto mb-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              <p className="text-gray-500">Aún no hay visitas registradas.</p>
+              <p className="text-gray-600 text-sm mt-1">
+                Las visitas de tus visitantes aparecerán aquí automáticamente.
+              </p>
+            </div>
+          )}
+
+          {/* Per-section stats */}
+          {stats.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
+                Por Sección
+              </h3>
+              <div className="space-y-3">
+                {stats.map((stat) => (
+                  <div
+                    key={stat.section}
+                    className="border border-gray-800 bg-gray-900/20 p-4"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="font-medium text-white">
+                          {getSectionLabel(stat.section)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {stat.count} {stat.count === 1 ? "visita" : "visitas"}{" "}
+                          · Promedio {formatDuration(stat.avgDuration)}
+                        </p>
+                      </div>
+                      <span className="text-2xl font-bold text-white">
+                        {stat.count}
                       </span>
-                    ) : (
-                      stat.countries.slice(0, 8).map((c) => (
-                        <Badge
-                          key={c.code}
-                          variant="outline"
-                          className="text-xs"
-                        >
-                          {c.name} ({c.count})
-                        </Badge>
-                      ))
+                    </div>
+                    {/* Progress bar */}
+                    <div className="h-1 bg-gray-800 mb-3">
+                      <div
+                        className="h-1 bg-white"
+                        style={{
+                          width: `${Math.min(100, (stat.count / totalVisits) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                    {/* Countries */}
+                    {stat.countries.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {stat.countries.slice(0, 10).map((c) => (
+                          <span
+                            key={c.code}
+                            className="flex items-center gap-1 text-xs text-gray-400 border border-gray-800 px-2 py-0.5"
+                          >
+                            <span>{getFlag(c.code)}</span>
+                            <span>{c.name}</span>
+                            <span className="text-gray-600">({c.count})</span>
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      <Separator />
-
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Visitas Recientes</h3>
-        <div className="space-y-2">
-          {recentVisits.map((visit: SectionVisit, i: number) => (
-            <div
-              // biome-ignore lint/suspicious/noArrayIndexKey: list is reversed and stable
-              key={i}
-              className="flex items-center justify-between text-sm border rounded-md px-4 py-2"
-            >
-              <div className="flex items-center gap-3">
-                <span className="font-medium">
-                  {SECTION_LABELS[visit.section] || visit.section}
-                </span>
-                <Badge variant="outline" className="text-xs">
-                  {visit.country.name}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <span>{formatDuration(Number(visit.duration))}</span>
-                <span>{formatDate(visit.timestamp)}</span>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          )}
+
+          {/* Recent visits */}
+          {recentVisits.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
+                Visitas Recientes
+              </h3>
+              <div className="border border-gray-800">
+                <div className="grid grid-cols-4 text-xs text-gray-500 uppercase tracking-wider px-4 py-2 border-b border-gray-800 bg-gray-900/40">
+                  <span>Sección</span>
+                  <span>País</span>
+                  <span>Duración</span>
+                  <span>Fecha</span>
+                </div>
+                {recentVisits.map((v) => (
+                  <div
+                    key={`${String(v.timestamp)}-${v.section}-${v.country.code}`}
+                    className="grid grid-cols-4 text-sm px-4 py-2.5 odd:bg-transparent even:bg-gray-900/20 border-b border-gray-800/50 last:border-0"
+                  >
+                    <span className="text-gray-300">
+                      {getSectionLabel(v.section)}
+                    </span>
+                    <span className="text-gray-400 flex items-center gap-1">
+                      <span>{getFlag(v.country.code)}</span>
+                      <span>{v.country.name}</span>
+                    </span>
+                    <span className="text-gray-400">
+                      {formatDuration(Number(v.duration))}
+                    </span>
+                    <span className="text-gray-500 text-xs">
+                      {formatDate(v.timestamp)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

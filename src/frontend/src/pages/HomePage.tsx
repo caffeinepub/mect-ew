@@ -4,22 +4,29 @@ export default function HomePage() {
   useSectionTracker("home");
 
   return (
-    <main
-      className="relative w-screen bg-black overflow-hidden"
+    <div
+      className="w-screen bg-black"
       style={{
         height: "100vh",
         minHeight: "100dvh",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
       <img
-        src="/assets/toro y oso, mercados financieros, graficas.jpg"
+        src="/assets/toro y oso, mercados financieros, graficas-3.jpg"
         alt="Hero Background - Financial Markets"
-        className="absolute inset-0 w-full h-full object-cover"
         style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
           objectPosition: "center",
-          filter: "grayscale(100%) contrast(1.1)",
+          display: "block",
+          filter: "grayscale(100%) contrast(1.1) brightness(0.9)",
         }}
       />
-    </main>
+    </div>
   );
 }

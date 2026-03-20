@@ -37,6 +37,12 @@ export interface PublicVideoMeta {
   'timestamp' : Time,
   'category' : VideoCategory,
 }
+export interface SectionVisit {
+  'duration' : bigint,
+  'country' : CountryInfo,
+  'section' : string,
+  'timestamp' : Time,
+}
 export interface StoredMessage {
   'id' : string,
   'status' : MessageStatus,
@@ -163,6 +169,7 @@ export interface _SERVICE {
   'getMessages' : ActorMethod<[[] | [FormType]], Array<StoredMessage>>,
   'getPendingVideos' : ActorMethod<[], Array<VideoMeta>>,
   'getRecordingState' : ActorMethod<[], boolean>,
+  'getSectionVisitRecords' : ActorMethod<[], Array<SectionVisit>>,
   'getThumbnailMeta' : ActorMethod<[string], [] | [ThumbnailMeta]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getVideoMeta' : ActorMethod<[string], [] | [PublicVideoMeta]>,
@@ -174,6 +181,7 @@ export interface _SERVICE {
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'moveVideoToCategory' : ActorMethod<[string, string], undefined>,
   'publishPendingVideo' : ActorMethod<[string], string>,
+  'recordSectionVisit' : ActorMethod<[string, CountryInfo, bigint], undefined>,
   'recordView' : ActorMethod<[string, CountryInfo], undefined>,
   'replyToMessage' : ActorMethod<[string, string], undefined>,
   'retryVerification' : ActorMethod<[], undefined>,

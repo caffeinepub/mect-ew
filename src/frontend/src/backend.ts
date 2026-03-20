@@ -128,12 +128,6 @@ export interface VideoViewRecord {
     country: CountryInfo;
     timestamp: Time;
 }
-export interface SectionVisit {
-    section: string;
-    country: CountryInfo;
-    duration: bigint;
-    timestamp: Time;
-}
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
@@ -156,6 +150,12 @@ export interface http_request_result {
     status: bigint;
     body: Uint8Array;
     headers: Array<http_header>;
+}
+export interface SectionVisit {
+    duration: bigint;
+    country: CountryInfo;
+    section: string;
+    timestamp: Time;
 }
 export interface PublicVideoMeta {
     id: string;
@@ -266,6 +266,7 @@ export interface backendInterface {
     getMessages(formType: FormType | null): Promise<Array<StoredMessage>>;
     getPendingVideos(): Promise<Array<VideoMeta>>;
     getRecordingState(): Promise<boolean>;
+    getSectionVisitRecords(): Promise<Array<SectionVisit>>;
     getThumbnailMeta(thumbnailId: string): Promise<ThumbnailMeta | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getVideoMeta(videoId: string): Promise<PublicVideoMeta | null>;
@@ -278,7 +279,6 @@ export interface backendInterface {
     moveVideoToCategory(videoId: string, newCategoryText: string): Promise<void>;
     publishPendingVideo(pendingVideoId: string): Promise<string>;
     recordSectionVisit(section: string, country: CountryInfo, duration: bigint): Promise<void>;
-    getSectionVisitRecords(): Promise<Array<SectionVisit>>;
     recordView(videoId: string, country: CountryInfo): Promise<void>;
     replyToMessage(messageId: string, replyText: string): Promise<void>;
     retryVerification(): Promise<void>;
@@ -686,6 +686,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getSectionVisitRecords(): Promise<Array<SectionVisit>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getSectionVisitRecords();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSectionVisitRecords();
+            return result;
+        }
+    }
     async getThumbnailMeta(arg0: string): Promise<ThumbnailMeta | null> {
         if (this.processError) {
             try {
@@ -840,20 +854,6 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async recordView(arg0: string, arg1: CountryInfo): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.recordView(arg0, arg1);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.recordView(arg0, arg1);
-            return result;
-        }
-    }
     async recordSectionVisit(arg0: string, arg1: CountryInfo, arg2: bigint): Promise<void> {
         if (this.processError) {
             try {
@@ -868,17 +868,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getSectionVisitRecords(): Promise<Array<SectionVisit>> {
+    async recordView(arg0: string, arg1: CountryInfo): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.getSectionVisitRecords();
+                const result = await this.actor.recordView(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getSectionVisitRecords();
+            const result = await this.actor.recordView(arg0, arg1);
             return result;
         }
     }

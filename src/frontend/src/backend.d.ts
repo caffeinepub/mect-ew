@@ -50,12 +50,6 @@ export interface VideoViewRecord {
     country: CountryInfo;
     timestamp: Time;
 }
-export interface SectionVisit {
-    section: string;
-    country: CountryInfo;
-    duration: bigint;
-    timestamp: Time;
-}
 export interface StoredMessage {
     id: string;
     status: MessageStatus;
@@ -74,6 +68,12 @@ export interface http_request_result {
     status: bigint;
     body: Uint8Array;
     headers: Array<http_header>;
+}
+export interface SectionVisit {
+    duration: bigint;
+    country: CountryInfo;
+    section: string;
+    timestamp: Time;
 }
 export interface PublicVideoMeta {
     id: string;
