@@ -166,6 +166,30 @@ actor {
     timestamp : Time.Time;
   };
 
+  // ICP Payment types
+  public type PaymentServiceType = {
+    #consultoria;
+    #mentoria;
+  };
+
+  public type PaymentStatus = {
+    #pending;
+    #confirmed;
+    #rejected;
+  };
+
+  public type PaymentRecord = {
+    id : Text;
+    name : Text;
+    email : Text;
+    txnHash : Text;
+    amountIcp : Text;
+    serviceType : PaymentServiceType;
+    status : PaymentStatus;
+    timestamp : Time.Time;
+    notes : ?Text;
+  };
+
   let videos = Map.empty<Text, VideoMeta>();
   let pendingVideos = Map.empty<Text, VideoMeta>();
   let messages = Map.empty<Text, StoredMessage>();
@@ -181,6 +205,9 @@ actor {
 
   let sectionVisitStore = Map.empty<Nat, SectionVisit>();
   var sectionVisitCounter : Nat = 0;
+
+  let paymentRecords = Map.empty<Text, PaymentRecord>();
+  var paymentCounter : Nat = 0;
 
   var domainVerificationToken : ?Text = ?"INITIAL_VERIFICATION_TOKEN";
   var customDomainStatus : {
@@ -207,6 +234,8 @@ actor {
   stable var _stableVideoViewRecords : [(Text, [VideoViewRecord])] = [];
   stable var _stableSectionVisits : [(Nat, SectionVisit)] = [];
   stable var _stableSectionVisitCounter : Nat = 0;
+  stable var _stablePaymentRecords : [(Text, PaymentRecord)] = [];
+  stable var _stablePaymentCounter : Nat = 0;
 
   // Save all state before each upgrade
   system func preupgrade() {
@@ -223,6 +252,8 @@ actor {
     _stableVideoViewRecords := videoViewRecords.entries().toArray();
     _stableSectionVisits := sectionVisitStore.entries().toArray();
     _stableSectionVisitCounter := sectionVisitCounter;
+    _stablePaymentRecords := paymentRecords.entries().toArray();
+    _stablePaymentCounter := paymentCounter;
   };
 
   // Restore all state after each upgrade
@@ -256,6 +287,10 @@ actor {
       sectionVisitStore.add(k, v);
     };
     sectionVisitCounter := _stableSectionVisitCounter;
+    for ((k, v) in _stablePaymentRecords.vals()) {
+      paymentRecords.add(k, v);
+    };
+    paymentCounter := _stablePaymentCounter;
     // Clear temporary stable storage after restore to free memory
     _stableUserRoles := [];
     _stableVideos := [];
@@ -265,6 +300,7 @@ actor {
     _stableVideoViewCounts := [];
     _stableVideoViewRecords := [];
     _stableSectionVisits := [];
+    _stablePaymentRecords := [];
   };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
@@ -721,6 +757,68 @@ actor {
       Runtime.trap("Acceso no autorizado: Solo administradores pueden ver visitas por sección");
     };
     sectionVisitStore.values().toArray();
+  };
+
+  // ICP Payment functions
+  public shared ({ caller }) func submitPaymentRecord(
+    name : Text,
+    email : Text,
+    txnHash : Text,
+    amountIcp : Text,
+    serviceType : PaymentServiceType,
+  ) : async Text {
+    paymentCounter += 1;
+    let id = "pay_" # paymentCounter.toText();
+
+    let record : PaymentRecord = {
+      id = id;
+      name = name;
+      email = email;
+      txnHash = txnHash;
+      amountIcp = amountIcp;
+      serviceType = serviceType;
+      status = #pending;
+      timestamp = Time.now();
+      notes = null;
+    };
+
+    paymentRecords.add(id, record);
+    id;
+  };
+
+  public query ({ caller }) func getPaymentRecords() : async [PaymentRecord] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Acceso no autorizado: Solo administradores pueden ver pagos");
+    };
+    paymentRecords.values().toArray();
+  };
+
+  public shared ({ caller }) func updatePaymentStatus(
+    paymentId : Text,
+    newStatus : PaymentStatus,
+    notes : ?Text,
+  ) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Acceso no autorizado: Solo administradores pueden actualizar pagos");
+    };
+
+    switch (paymentRecords.get(paymentId)) {
+      case (null) { Runtime.trap("Pago no encontrado") };
+      case (?record) {
+        let updated : PaymentRecord = {
+          id = record.id;
+          name = record.name;
+          email = record.email;
+          txnHash = record.txnHash;
+          amountIcp = record.amountIcp;
+          serviceType = record.serviceType;
+          status = newStatus;
+          timestamp = record.timestamp;
+          notes = notes;
+        };
+        paymentRecords.add(paymentId, updated);
+      };
+    };
   };
 
   public shared ({ caller }) func streamVideo(videoId : Text, country : ?CountryInfo) : async ?Storage.ExternalBlob {

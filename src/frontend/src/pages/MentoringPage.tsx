@@ -6,9 +6,10 @@ import {
 } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { FormType } from "../backend";
+import { FormType, PaymentServiceType } from "../backend";
 import ContactForm from "../components/ContactForm";
 import FormSpecificMessageManagement from "../components/FormSpecificMessageManagement";
+import IcpPaymentWidget from "../components/IcpPaymentWidget";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useIsCallerAdmin } from "../hooks/useQueries";
 import { useSectionTracker } from "../hooks/useSectionTracker";
@@ -162,6 +163,8 @@ export default function MentoringPage() {
                 </p>
               </div>
             </div>
+
+            <IcpPaymentWidget serviceType={PaymentServiceType.mentoria} />
 
             <ContactForm formType={FormType.mentoria} />
 

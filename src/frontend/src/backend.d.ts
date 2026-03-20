@@ -102,6 +102,17 @@ export interface ContactForm {
 export interface UserProfile {
     name: string;
 }
+export interface PaymentRecord {
+    id: string;
+    name: string;
+    email: string;
+    txnHash: string;
+    amountIcp: string;
+    serviceType: PaymentServiceType;
+    status: PaymentStatus;
+    timestamp: Time;
+    notes?: string;
+}
 export enum FormType {
     contacto = "contacto",
     consultoria = "consultoria",
@@ -153,6 +164,15 @@ export enum ImageFormat {
     png = "png",
     webp = "webp"
 }
+export enum PaymentServiceType {
+    consultoria = "consultoria",
+    mentoria = "mentoria"
+}
+export enum PaymentStatus {
+    pending = "pending",
+    confirmed = "confirmed",
+    rejected = "rejected"
+}
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bulkDeleteVideos(videoIds: Array<string>): Promise<void>;
@@ -176,6 +196,7 @@ export interface backendInterface {
         lastAttempt?: Time;
     }>;
     getMessages(formType: FormType | null): Promise<Array<StoredMessage>>;
+    getPaymentRecords(): Promise<Array<PaymentRecord>>;
     getPendingVideos(): Promise<Array<VideoMeta>>;
     getRecordingState(): Promise<boolean>;
     getSectionVisitRecords(): Promise<Array<SectionVisit>>;
@@ -200,7 +221,9 @@ export interface backendInterface {
     stopRecording(): Promise<void>;
     streamVideo(videoId: string, country: CountryInfo | null): Promise<ExternalBlob | null>;
     submitContactForm(form: ContactForm, formType: FormType): Promise<string>;
+    submitPaymentRecord(name: string, email: string, txnHash: string, amountIcp: string, serviceType: PaymentServiceType): Promise<string>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
+    updatePaymentStatus(paymentId: string, newStatus: PaymentStatus, notes: string | null): Promise<void>;
     updateVideoTitle(videoId: string, newTitle: string): Promise<void>;
     uploadCustomThumbnail(videoId: string, thumbnailBlob: ExternalBlob, imageFormat: ImageFormat, dimensions: {
         height: bigint;

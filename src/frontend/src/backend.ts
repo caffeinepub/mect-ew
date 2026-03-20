@@ -234,6 +234,26 @@ export enum VideoFileType {
     mp4 = "mp4",
     webm = "webm"
 }
+export enum PaymentServiceType {
+    consultoria = "consultoria",
+    mentoria = "mentoria"
+}
+export enum PaymentStatus {
+    pending = "pending",
+    confirmed = "confirmed",
+    rejected = "rejected"
+}
+export interface PaymentRecord {
+    id: string;
+    name: string;
+    email: string;
+    txnHash: string;
+    amountIcp: string;
+    serviceType: PaymentServiceType;
+    status: PaymentStatus;
+    timestamp: Time;
+    notes?: string;
+}
 export interface backendInterface {
     _caffeineStorageBlobIsLive(hash: Uint8Array): Promise<boolean>;
     _caffeineStorageBlobsToDelete(): Promise<Array<Uint8Array>>;
@@ -301,6 +321,9 @@ export interface backendInterface {
         width: bigint;
     }, fileSize: bigint, _imageFormat: Variant_jpg_png_webp): Promise<string>;
     uploadVideo(title: string, blob: ExternalBlob, fileSize: bigint, category: VideoCategory): Promise<string>;
+    getPaymentRecords(): Promise<Array<PaymentRecord>>;
+    submitPaymentRecord(name: string, email: string, txnHash: string, amountIcp: string, serviceType: PaymentServiceType): Promise<string>;
+    updatePaymentStatus(paymentId: string, newStatus: PaymentStatus, notes: string | null): Promise<void>;
 }
 import type { CountryInfo as _CountryInfo, ExternalBlob as _ExternalBlob, FormType as _FormType, ImageFormat as _ImageFormat, MessageStatus as _MessageStatus, PublicVideoMeta as _PublicVideoMeta, StoredMessage as _StoredMessage, ThumbnailMeta as _ThumbnailMeta, ThumbnailType as _ThumbnailType, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole, VideoCategory as _VideoCategory, VideoFileType as _VideoFileType, VideoMeta as _VideoMeta, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -1099,6 +1122,25 @@ export class Backend implements backendInterface {
             const result = await this.actor.uploadVideo(arg0, await to_candid_ExternalBlob_n10(this._uploadFile, this._downloadFile, arg1), arg2, to_candid_VideoCategory_n21(this._uploadFile, this._downloadFile, arg3));
             return result;
         }
+    }
+    async getPaymentRecords(): Promise<Array<PaymentRecord>> {
+        const results = await (this.actor as unknown as { getPaymentRecords: () => Promise<Array<{id: string; name: string; email: string; txnHash: string; amountIcp: string; serviceType: {consultoria?: null; mentoria?: null}; status: {pending?: null; confirmed?: null; rejected?: null}; timestamp: bigint; notes: [string] | []}>> }).getPaymentRecords();
+        return results.map(r => ({
+            id: r.id, name: r.name, email: r.email, txnHash: r.txnHash, amountIcp: r.amountIcp,
+            serviceType: r.serviceType.consultoria !== undefined ? PaymentServiceType.consultoria : PaymentServiceType.mentoria,
+            status: r.status.pending !== undefined ? PaymentStatus.pending : r.status.confirmed !== undefined ? PaymentStatus.confirmed : PaymentStatus.rejected,
+            timestamp: r.timestamp,
+            notes: r.notes.length > 0 ? r.notes[0] : undefined
+        }));
+    }
+    async submitPaymentRecord(name: string, email: string, txnHash: string, amountIcp: string, serviceType: PaymentServiceType): Promise<string> {
+        const svcVariant = serviceType === PaymentServiceType.consultoria ? { consultoria: null } : { mentoria: null };
+        return await (this.actor as unknown as { submitPaymentRecord: (n: string, e: string, h: string, a: string, s: unknown) => Promise<string> }).submitPaymentRecord(name, email, txnHash, amountIcp, svcVariant);
+    }
+    async updatePaymentStatus(paymentId: string, newStatus: PaymentStatus, notes: string | null): Promise<void> {
+        const statusVariant = newStatus === PaymentStatus.pending ? { pending: null } : newStatus === PaymentStatus.confirmed ? { confirmed: null } : { rejected: null };
+        const notesVariant = notes ? [notes] : [];
+        await (this.actor as unknown as { updatePaymentStatus: (id: string, s: unknown, n: unknown) => Promise<void> }).updatePaymentStatus(paymentId, statusVariant, notesVariant);
     }
 }
 async function from_candid_ExternalBlob_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ExternalBlob): Promise<ExternalBlob> {

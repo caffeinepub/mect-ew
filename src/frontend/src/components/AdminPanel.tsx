@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DomainManagement from "./DomainManagement";
 import MessageManagement from "./MessageManagement";
+import PaymentsPanel from "./PaymentsPanel";
 import SectionAnalyticsPanel from "./SectionAnalyticsPanel";
 
 export default function AdminPanel() {
@@ -9,14 +10,17 @@ export default function AdminPanel() {
       <div>
         <h2 className="text-2xl font-bold mb-2">Panel de Administración</h2>
         <p className="text-muted-foreground">
-          Gestiona mensajes, analíticas y el dominio personalizado
+          Gestiona mensajes, pagos, analíticas y el dominio personalizado
         </p>
       </div>
 
       <Tabs defaultValue="messages" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="messages" data-ocid="admin.messages.tab">
             Mensajes
+          </TabsTrigger>
+          <TabsTrigger value="payments" data-ocid="admin.payments.tab">
+            Pagos ICP
           </TabsTrigger>
           <TabsTrigger value="analytics" data-ocid="admin.analytics.tab">
             Analíticas
@@ -27,6 +31,9 @@ export default function AdminPanel() {
         </TabsList>
         <TabsContent value="messages" className="mt-6">
           <MessageManagement />
+        </TabsContent>
+        <TabsContent value="payments" className="mt-6">
+          <PaymentsPanel />
         </TabsContent>
         <TabsContent value="analytics" className="mt-6">
           <SectionAnalyticsPanel />
