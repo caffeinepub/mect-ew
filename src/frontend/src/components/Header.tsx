@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Menu, Shield, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import logoSrc from "../../public/assets/Logo-3.png";
+import logoSrc from "../../public/assets/Logo-4.png";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useIsCallerAdmin } from "../hooks/useQueries";
 
