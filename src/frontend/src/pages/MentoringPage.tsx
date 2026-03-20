@@ -4,14 +4,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import { FormType, PaymentServiceType } from "../backend";
-import ContactForm from "../components/ContactForm";
-import FormSpecificMessageManagement from "../components/FormSpecificMessageManagement";
+import { PaymentServiceType } from "../backend";
 import IcpPaymentWidget from "../components/IcpPaymentWidget";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
-import { useIsCallerAdmin } from "../hooks/useQueries";
 import { useSectionTracker } from "../hooks/useSectionTracker";
 
 const bloques = [
@@ -60,13 +54,6 @@ const bloques = [
 
 export default function MentoringPage() {
   useSectionTracker("mentorias");
-  const { identity } = useInternetIdentity();
-  const { data: isAdmin, isLoading: isLoadingAdmin } = useIsCallerAdmin();
-
-  const isAuthenticated = !!identity;
-  const showAdminPanel = isAuthenticated && isAdmin;
-  const showUnauthorizedMessage =
-    isAuthenticated && !isLoadingAdmin && !isAdmin;
 
   return (
     <main className="min-h-screen pt-20 pb-20">
@@ -165,26 +152,6 @@ export default function MentoringPage() {
             </div>
 
             <IcpPaymentWidget serviceType={PaymentServiceType.mentoria} />
-
-            <ContactForm formType={FormType.mentoria} />
-
-            {showUnauthorizedMessage && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Acceso no autorizado</AlertTitle>
-                <AlertDescription>
-                  El panel de administración de mensajes está disponible solo
-                  para el administrador del sitio.
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {showAdminPanel && (
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold">Panel de Administración</h2>
-                <FormSpecificMessageManagement formType={FormType.mentoria} />
-              </div>
-            )}
           </div>
         </div>
       </section>

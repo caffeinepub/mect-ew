@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bitcoin, Check, Copy } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 import type { PaymentServiceType } from "../backend";
 import { useActor } from "../hooks/useActor";
@@ -61,17 +61,15 @@ export default function IcpPaymentWidget({ serviceType }: Props) {
 
   return (
     <div className="border border-border rounded-none p-6 space-y-6">
-      <div className="flex items-center gap-2">
-        <Bitcoin className="w-5 h-5" />
+      <div>
         <h3 className="text-lg font-semibold">Pago con ICP</h3>
       </div>
 
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          Podés abonar directamente en{" "}
-          <span className="font-semibold text-foreground">ICP</span> (token
-          nativo de Internet Computer) desde cualquier billetera compatible:
-          NNS, Plug, Stoic u otras.
+          Los pagos se realizan a través del token{" "}
+          <span className="font-semibold text-foreground">ICP</span> desde
+          cualquier billetera compatible: NNS, Plug, Stoic u otras.
         </p>
 
         <div className="space-y-1">
