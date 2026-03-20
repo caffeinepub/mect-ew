@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Menu, Shield, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import logoSrc from "../../public/assets/Logo-3.png";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useIsCallerAdmin } from "../hooks/useQueries";
 
@@ -73,7 +74,7 @@ export default function Header() {
             className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
           >
             <img
-              src="/assets/Logo-3.png"
+              src={logoSrc}
               alt="MECT EW Logo"
               className="h-8 w-auto object-contain"
             />
