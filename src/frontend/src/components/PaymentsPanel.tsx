@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, RefreshCw, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 import { type PaymentRecord, PaymentStatus } from "../backend";
 import { useActor } from "../hooks/useActor";
 
@@ -21,46 +21,44 @@ function serviceLabel(type: string) {
 }
 
 export default function PaymentsPanel() {
-  const { actor } = useActor();
-  const [payments, setPayments] = useState<PaymentRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [updating, setUpdating] = useState<string | null>(null);
+  const { actor, isFetching: actorFetching } = useActor();
+  const queryClient = useQueryClient();
 
-  const load = useCallback(async () => {
-    if (!actor) return;
-    setLoading(true);
-    setError("");
-    try {
-      const records = await actor.getPaymentRecords();
-      setPayments(
-        [...records].sort((a, b) => Number(b.timestamp) - Number(a.timestamp)),
+  const {
+    data: payments,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery<PaymentRecord[]>({
+    queryKey: ["paymentRecords"],
+    queryFn: async () => {
+      const records = await actor!.getPaymentRecords();
+      return [...records].sort(
+        (a, b) => Number(b.timestamp) - Number(a.timestamp),
       );
-    } catch {
-      setError("Error al cargar pagos.");
-    } finally {
-      setLoading(false);
-    }
-  }, [actor]);
+    },
+    enabled: !!actor && !actorFetching,
+    refetchOnWindowFocus: true,
+  });
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: PaymentStatus;
+    }) => {
+      await actor!.updatePaymentStatus(id, status, null);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["paymentRecords"] });
+    },
+  });
 
-  const updateStatus = async (id: string, status: PaymentStatus) => {
-    if (!actor) return;
-    setUpdating(id);
-    try {
-      await actor.updatePaymentStatus(id, status, null);
-      await load();
-    } catch {
-      setError("Error al actualizar estado.");
-    } finally {
-      setUpdating(null);
-    }
-  };
-
-  if (loading) {
+  if (isLoading || actorFetching) {
     return (
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3" />
@@ -81,21 +79,50 @@ export default function PaymentsPanel() {
             </span>
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={load} className="gap-2">
-          <RefreshCw className="w-4 h-4" /> Actualizar
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="gap-2"
+        >
+          <RefreshCw
+            className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
+          />
+          Actualizar
         </Button>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {isError && (
+        <div className="border border-red-800 bg-red-950/30 p-4">
+          <p className="text-red-400 text-sm">
+            Error al cargar pagos: {String(error)}
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="mt-2 text-xs text-red-400 underline"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
 
-      {payments.length === 0 ? (
+      {updateMutation.isError && (
+        <p className="text-sm text-destructive">Error al actualizar estado.</p>
+      )}
+
+      {!isError && (!payments || payments.length === 0) ? (
         <p className="text-muted-foreground text-sm text-center py-8">
           No hay pagos registrados todavía.
         </p>
       ) : (
         <div className="space-y-3">
-          {payments.map((p) => {
+          {payments?.map((p) => {
             const { label, variant } = statusLabel(p.status);
+            const isUpdating =
+              updateMutation.isPending &&
+              (updateMutation.variables as { id: string })?.id === p.id;
             return (
               <div key={p.id} className="border border-border p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
@@ -152,9 +179,12 @@ export default function PaymentsPanel() {
                     <Button
                       size="sm"
                       onClick={() =>
-                        updateStatus(p.id, PaymentStatus.confirmed)
+                        updateMutation.mutate({
+                          id: p.id,
+                          status: PaymentStatus.confirmed,
+                        })
                       }
-                      disabled={updating === p.id}
+                      disabled={isUpdating}
                       className="gap-1 rounded-none"
                     >
                       <Check className="w-3 h-3" /> Confirmar
@@ -162,8 +192,13 @@ export default function PaymentsPanel() {
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => updateStatus(p.id, PaymentStatus.rejected)}
-                      disabled={updating === p.id}
+                      onClick={() =>
+                        updateMutation.mutate({
+                          id: p.id,
+                          status: PaymentStatus.rejected,
+                        })
+                      }
+                      disabled={isUpdating}
                       className="gap-1 rounded-none"
                     >
                       <X className="w-3 h-3" /> Rechazar
