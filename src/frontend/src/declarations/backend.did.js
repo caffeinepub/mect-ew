@@ -144,6 +144,27 @@ export const VideoFileType = IDL.Variant({
   'webm' : IDL.Null,
 });
 
+export const PaymentServiceType = IDL.Variant({
+  'consultoria' : IDL.Null,
+  'mentoria' : IDL.Null,
+});
+export const PaymentStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'confirmed' : IDL.Null,
+  'rejected' : IDL.Null,
+});
+export const PaymentRecord = IDL.Record({
+  'id' : IDL.Text,
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'txnHash' : IDL.Text,
+  'amountIcp' : IDL.Text,
+  'serviceType' : PaymentServiceType,
+  'status' : PaymentStatus,
+  'timestamp' : Time,
+  'notes' : IDL.Opt(IDL.Text),
+});
+
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
       [IDL.Vec(IDL.Nat8)],
@@ -305,6 +326,17 @@ export const idlService = IDL.Service({
         IDL.Variant({ 'jpg' : IDL.Null, 'png' : IDL.Null, 'webp' : IDL.Null }),
       ],
       [IDL.Text],
+      [],
+    ),
+  'getPaymentRecords' : IDL.Func([], [IDL.Vec(PaymentRecord)], ['query']),
+  'submitPaymentRecord' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],
+      [IDL.Text],
+      [],
+    ),
+  'updatePaymentStatus' : IDL.Func(
+      [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
+      [],
       [],
     ),
   'uploadVideo' : IDL.Func(
@@ -629,6 +661,17 @@ export const idlFactory = ({ IDL }) => {
           }),
         ],
         [IDL.Text],
+        [],
+      ),
+    'getPaymentRecords' : IDL.Func([], [IDL.Vec(PaymentRecord)], ['query']),
+    'submitPaymentRecord' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],
+        [IDL.Text],
+        [],
+      ),
+    'updatePaymentStatus' : IDL.Func(
+        [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
+        [],
         [],
       ),
     'uploadVideo' : IDL.Func(

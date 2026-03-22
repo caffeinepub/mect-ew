@@ -1,7 +1,18 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, RefreshCw, X } from "lucide-react";
+import { Check, RefreshCw, Trash2, X } from "lucide-react";
+import { useState } from "react";
 import { type PaymentRecord, PaymentStatus } from "../backend";
 import { useActor } from "../hooks/useActor";
 
@@ -23,6 +34,7 @@ function serviceLabel(type: string) {
 export default function PaymentsPanel() {
   const { actor, isFetching: actorFetching } = useActor();
   const queryClient = useQueryClient();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const {
     data: payments,
@@ -34,6 +46,9 @@ export default function PaymentsPanel() {
   } = useQuery<PaymentRecord[]>({
     queryKey: ["paymentRecords"],
     queryFn: async () => {
+      if (typeof (actor as any).getPaymentRecords !== "function") {
+        throw new Error("Actor not ready");
+      }
       const records = await actor!.getPaymentRecords();
       return [...records].sort(
         (a, b) => Number(b.timestamp) - Number(a.timestamp),
@@ -41,6 +56,8 @@ export default function PaymentsPanel() {
     },
     enabled: !!actor && !actorFetching,
     refetchOnWindowFocus: true,
+    retry: 5,
+    retryDelay: 2000,
   });
 
   const updateMutation = useMutation({
@@ -55,6 +72,16 @@ export default function PaymentsPanel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentRecords"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await (actor as any).deletePaymentRecord(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["paymentRecords"] });
+      setDeletingId(null);
     },
   });
 
@@ -112,6 +139,10 @@ export default function PaymentsPanel() {
         <p className="text-sm text-destructive">Error al actualizar estado.</p>
       )}
 
+      {deleteMutation.isError && (
+        <p className="text-sm text-destructive">Error al eliminar pago.</p>
+      )}
+
       {!isError && (!payments || payments.length === 0) ? (
         <p className="text-muted-foreground text-sm text-center py-8">
           No hay pagos registrados todavía.
@@ -123,6 +154,8 @@ export default function PaymentsPanel() {
             const isUpdating =
               updateMutation.isPending &&
               (updateMutation.variables as { id: string })?.id === p.id;
+            const isDeleting =
+              deleteMutation.isPending && deleteMutation.variables === p.id;
             return (
               <div key={p.id} className="border border-border p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
@@ -174,42 +207,91 @@ export default function PaymentsPanel() {
                   </p>
                 )}
 
-                {p.status === PaymentStatus.pending && (
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        updateMutation.mutate({
-                          id: p.id,
-                          status: PaymentStatus.confirmed,
-                        })
-                      }
-                      disabled={isUpdating}
-                      className="gap-1 rounded-none"
-                    >
-                      <Check className="w-3 h-3" /> Confirmar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() =>
-                        updateMutation.mutate({
-                          id: p.id,
-                          status: PaymentStatus.rejected,
-                        })
-                      }
-                      disabled={isUpdating}
-                      className="gap-1 rounded-none"
-                    >
-                      <X className="w-3 h-3" /> Rechazar
-                    </Button>
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {p.status === PaymentStatus.pending && (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          updateMutation.mutate({
+                            id: p.id,
+                            status: PaymentStatus.confirmed,
+                          })
+                        }
+                        disabled={isUpdating || isDeleting}
+                        className="gap-1 rounded-none"
+                        data-ocid="payments.confirm_button"
+                      >
+                        <Check className="w-3 h-3" /> Confirmar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() =>
+                          updateMutation.mutate({
+                            id: p.id,
+                            status: PaymentStatus.rejected,
+                          })
+                        }
+                        disabled={isUpdating || isDeleting}
+                        className="gap-1 rounded-none"
+                        data-ocid="payments.secondary_button"
+                      >
+                        <X className="w-3 h-3" /> Rechazar
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setDeletingId(p.id)}
+                    disabled={isUpdating || isDeleting}
+                    className="gap-1 rounded-none"
+                    data-ocid="payments.delete_button"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    {isDeleting ? "Eliminando..." : "Eliminar"}
+                  </Button>
+                </div>
               </div>
             );
           })}
         </div>
       )}
+
+      <AlertDialog
+        open={deletingId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeletingId(null);
+        }}
+      >
+        <AlertDialogContent data-ocid="payments.dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar pago?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El registro de pago será
+              eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => setDeletingId(null)}
+              data-ocid="payments.cancel_button"
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deletingId) deleteMutation.mutate(deletingId);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-ocid="payments.confirm_button"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

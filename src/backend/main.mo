@@ -821,6 +821,14 @@ actor {
     };
   };
 
+
+  public shared ({ caller }) func deletePaymentRecord(paymentId : Text) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Acceso no autorizado: Solo administradores pueden eliminar pagos");
+    };
+    paymentRecords.remove(paymentId);
+  };
+
   public shared ({ caller }) func streamVideo(videoId : Text, country : ?CountryInfo) : async ?Storage.ExternalBlob {
     switch (videos.get(videoId)) {
       case (null) { null };

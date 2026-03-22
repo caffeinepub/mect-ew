@@ -105,6 +105,23 @@ export interface VideoMeta {
   'category' : VideoCategory,
 }
 export interface VideoViewRecord { 'country' : CountryInfo, 'timestamp' : Time }
+export type PaymentServiceType = { 'consultoria' : null } |
+  { 'mentoria' : null };
+export type PaymentStatus = { 'pending' : null } |
+  { 'confirmed' : null } |
+  { 'rejected' : null };
+export interface PaymentRecord {
+  'id' : string,
+  'name' : string,
+  'email' : string,
+  'txnHash' : string,
+  'amountIcp' : string,
+  'serviceType' : PaymentServiceType,
+  'status' : PaymentStatus,
+  'timestamp' : Time,
+  'notes' : [] | [string],
+}
+
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -223,6 +240,9 @@ export interface _SERVICE {
     ],
     string
   >,
+  'getPaymentRecords' : ActorMethod<[], Array<PaymentRecord>>,
+  'submitPaymentRecord' : ActorMethod<[string, string, string, string, PaymentServiceType], string>,
+  'updatePaymentStatus' : ActorMethod<[string, PaymentStatus, [] | [string]], undefined>,
   'uploadVideo' : ActorMethod<
     [string, ExternalBlob, bigint, VideoCategory],
     string
