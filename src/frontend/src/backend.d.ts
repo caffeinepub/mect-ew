@@ -180,6 +180,7 @@ export interface backendInterface {
     bulkRecordViews(viewEntries: Array<[string, CountryInfo]>): Promise<void>;
     deleteCustomThumbnail(videoId: string, thumbnailId: string): Promise<void>;
     deleteMessage(messageId: string): Promise<void>;
+    deletePaymentRecord(paymentId: string): Promise<void>;
     deleteVideo(videoId: string): Promise<void>;
     downloadBlob(blob: ExternalBlob): Promise<ExternalBlob>;
     downloadVideoBlob(videoId: string): Promise<ExternalBlob | null>;

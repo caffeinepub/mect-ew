@@ -77,10 +77,16 @@ export default function PaymentsPanel() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await (actor as any).deletePaymentRecord(id);
+      if (typeof actor?.deletePaymentRecord !== "function") {
+        throw new Error("deletePaymentRecord no está disponible en el actor");
+      }
+      await actor.deletePaymentRecord(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentRecords"] });
+      setDeletingId(null);
+    },
+    onError: () => {
       setDeletingId(null);
     },
   });
@@ -140,7 +146,9 @@ export default function PaymentsPanel() {
       )}
 
       {deleteMutation.isError && (
-        <p className="text-sm text-destructive">Error al eliminar pago.</p>
+        <p className="text-sm text-destructive">
+          Error al eliminar pago: {String(deleteMutation.error)}
+        </p>
       )}
 
       {!isError && (!payments || payments.length === 0) ? (
