@@ -181,6 +181,7 @@ export interface backendInterface {
     deleteCustomThumbnail(videoId: string, thumbnailId: string): Promise<void>;
     deleteMessage(messageId: string): Promise<void>;
     deletePaymentRecord(paymentId: string): Promise<void>;
+    deleteSectionVisitRecord(visitId: bigint): Promise<void>;
     deleteVideo(videoId: string): Promise<void>;
     downloadBlob(blob: ExternalBlob): Promise<ExternalBlob>;
     downloadVideoBlob(videoId: string): Promise<ExternalBlob | null>;
@@ -200,7 +201,7 @@ export interface backendInterface {
     getPaymentRecords(): Promise<Array<PaymentRecord>>;
     getPendingVideos(): Promise<Array<VideoMeta>>;
     getRecordingState(): Promise<boolean>;
-    getSectionVisitRecords(): Promise<Array<SectionVisit>>;
+    getSectionVisitRecords(): Promise<Array<[bigint, SectionVisit]>>;
     getThumbnailMeta(thumbnailId: string): Promise<ThumbnailMeta | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getVideoMeta(videoId: string): Promise<PublicVideoMeta | null>;

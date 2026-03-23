@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import type { SectionVisit } from "../backend";
 import { useActor } from "../hooks/useActor";
 
@@ -96,24 +96,54 @@ interface SectionStat {
   countries: { code: string; name: string; count: number }[];
 }
 
+type VisitEntry = [bigint, SectionVisit];
+
 export default function SectionAnalyticsPanel() {
   const { actor, isFetching: actorFetching } = useActor();
+  const queryClient = useQueryClient();
+  const [confirmDeleteId, setConfirmDeleteId] = useState<bigint | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const {
-    data: visits,
+    data: visitEntries,
     isLoading,
     isError,
     error,
     refetch,
     isFetching,
     dataUpdatedAt,
-  } = useQuery<SectionVisit[]>({
+  } = useQuery<VisitEntry[]>({
     queryKey: ["sectionVisits"],
     queryFn: async () => actor!.getSectionVisitRecords(),
     enabled: !!actor && !actorFetching,
     refetchInterval: 30_000,
     refetchOnWindowFocus: true,
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (visitId: bigint) => {
+      if (typeof actor?.deleteSectionVisitRecord !== "function") {
+        throw new Error(
+          "deleteSectionVisitRecord no está disponible en el actor",
+        );
+      }
+      await actor.deleteSectionVisitRecord(visitId);
+    },
+    onSuccess: () => {
+      setConfirmDeleteId(null);
+      setDeleteError(null);
+      queryClient.invalidateQueries({ queryKey: ["sectionVisits"] });
+    },
+    onError: (err: unknown) => {
+      setDeleteError(`Error al eliminar registro: ${String(err)}`);
+      setConfirmDeleteId(null);
+    },
+  });
+
+  const visits = useMemo(
+    () => visitEntries?.map(([, v]) => v) ?? [],
+    [visitEntries],
+  );
 
   const stats = useMemo((): SectionStat[] => {
     if (!visits || visits.length === 0) return [];
@@ -168,11 +198,11 @@ export default function SectionAnalyticsPanel() {
   }, [visits]);
 
   const recentVisits = useMemo(() => {
-    if (!visits) return [];
-    return [...visits]
-      .sort((a, b) => Number(b.timestamp - a.timestamp))
-      .slice(0, 25);
-  }, [visits]);
+    if (!visitEntries) return [];
+    return [...visitEntries]
+      .sort((a, b) => Number(b[1].timestamp - a[1].timestamp))
+      .slice(0, 50);
+  }, [visitEntries]);
 
   const lastUpdated = dataUpdatedAt
     ? new Date(dataUpdatedAt).toLocaleTimeString("es-ES", {
@@ -242,6 +272,61 @@ export default function SectionAnalyticsPanel() {
           Actualizar
         </button>
       </div>
+
+      {/* Delete error */}
+      {deleteError && (
+        <div className="border border-red-800 bg-red-950/30 p-3 flex items-center justify-between">
+          <p className="text-red-400 text-sm">{deleteError}</p>
+          <button
+            type="button"
+            onClick={() => setDeleteError(null)}
+            className="text-red-400 hover:text-red-300 ml-4"
+          >
+            <svg
+              aria-hidden="true"
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                d="M6 18L18 6M6 6l12 12"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Confirm delete dialog */}
+      {confirmDeleteId !== null && (
+        <div className="border border-gray-700 bg-gray-900 p-4">
+          <p className="text-sm text-gray-300 mb-3">
+            ¿Confirmar eliminación de este registro? Esta acción no se puede
+            deshacer.
+          </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => deleteMutation.mutate(confirmDeleteId)}
+              disabled={deleteMutation.isPending}
+              className="px-4 py-1.5 text-sm bg-red-900 border border-red-700 text-red-200 hover:bg-red-800 transition-colors disabled:opacity-50"
+            >
+              {deleteMutation.isPending ? "Eliminando..." : "Eliminar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmDeleteId(null)}
+              disabled={deleteMutation.isPending}
+              className="px-4 py-1.5 text-sm border border-gray-700 text-gray-400 hover:border-gray-500 hover:text-white transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Loading */}
       {isLoading && (
@@ -369,7 +454,6 @@ export default function SectionAnalyticsPanel() {
                         {stat.count}
                       </span>
                     </div>
-                    {/* Progress bar */}
                     <div className="h-1 bg-gray-800 mb-3">
                       <div
                         className="h-1 bg-white"
@@ -378,7 +462,6 @@ export default function SectionAnalyticsPanel() {
                         }}
                       />
                     </div>
-                    {/* Countries */}
                     {stat.countries.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {stat.countries.slice(0, 10).map((c) => (
@@ -399,23 +482,24 @@ export default function SectionAnalyticsPanel() {
             </div>
           )}
 
-          {/* Recent visits */}
+          {/* Recent visits table with delete */}
           {recentVisits.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
                 Visitas Recientes
               </h3>
               <div className="border border-gray-800">
-                <div className="grid grid-cols-4 text-xs text-gray-500 uppercase tracking-wider px-4 py-2 border-b border-gray-800 bg-gray-900/40">
+                <div className="grid grid-cols-5 text-xs text-gray-500 uppercase tracking-wider px-4 py-2 border-b border-gray-800 bg-gray-900/40">
                   <span>Sección</span>
                   <span>País</span>
                   <span>Duración</span>
                   <span>Fecha</span>
+                  <span className="text-right">Acción</span>
                 </div>
-                {recentVisits.map((v) => (
+                {recentVisits.map(([id, v]) => (
                   <div
-                    key={`${String(v.timestamp)}-${v.section}-${v.country.code}`}
-                    className="grid grid-cols-4 text-sm px-4 py-2.5 odd:bg-transparent even:bg-gray-900/20 border-b border-gray-800/50 last:border-0"
+                    key={String(id)}
+                    className="grid grid-cols-5 items-center text-sm px-4 py-2.5 odd:bg-transparent even:bg-gray-900/20 border-b border-gray-800/50 last:border-0"
                   >
                     <span className="text-gray-300">
                       {getSectionLabel(v.section)}
@@ -430,6 +514,32 @@ export default function SectionAnalyticsPanel() {
                     <span className="text-gray-500 text-xs">
                       {formatDate(v.timestamp)}
                     </span>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(id)}
+                        disabled={
+                          deleteMutation.isPending && confirmDeleteId === id
+                        }
+                        className="text-gray-600 hover:text-red-400 transition-colors disabled:opacity-50"
+                        title="Eliminar registro"
+                      >
+                        <svg
+                          aria-hidden="true"
+                          className="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

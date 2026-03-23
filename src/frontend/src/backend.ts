@@ -287,7 +287,8 @@ export interface backendInterface {
     getMessages(formType: FormType | null): Promise<Array<StoredMessage>>;
     getPendingVideos(): Promise<Array<VideoMeta>>;
     getRecordingState(): Promise<boolean>;
-    getSectionVisitRecords(): Promise<Array<SectionVisit>>;
+    getSectionVisitRecords(): Promise<Array<[bigint, SectionVisit]>>;
+    deleteSectionVisitRecord(visitId: bigint): Promise<void>;
     getThumbnailMeta(thumbnailId: string): Promise<ThumbnailMeta | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getVideoMeta(videoId: string): Promise<PublicVideoMeta | null>;
@@ -525,6 +526,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async deleteSectionVisitRecord(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await (this.actor as unknown as { deleteSectionVisitRecord: (id: bigint) => Promise<void> }).deleteSectionVisitRecord(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await (this.actor as unknown as { deleteSectionVisitRecord: (id: bigint) => Promise<void> }).deleteSectionVisitRecord(arg0);
+            return result;
+        }
+    }
     async deleteVideo(arg0: string): Promise<void> {
         if (this.processError) {
             try {
@@ -725,7 +740,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getSectionVisitRecords(): Promise<Array<SectionVisit>> {
+    async getSectionVisitRecords(): Promise<Array<[bigint, SectionVisit]>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getSectionVisitRecords();

@@ -752,11 +752,18 @@ actor {
     sectionVisitStore.add(sectionVisitCounter, visit);
   };
 
-  public query ({ caller }) func getSectionVisitRecords() : async [SectionVisit] {
+  public query ({ caller }) func getSectionVisitRecords() : async [(Nat, SectionVisit)] {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Acceso no autorizado: Solo administradores pueden ver visitas por sección");
     };
-    sectionVisitStore.values().toArray();
+    sectionVisitStore.entries().toArray();
+  };
+
+  public shared ({ caller }) func deleteSectionVisitRecord(visitId : Nat) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Acceso no autorizado: Solo administradores pueden eliminar visitas");
+    };
+    sectionVisitStore.remove(visitId);
   };
 
   // ICP Payment functions
