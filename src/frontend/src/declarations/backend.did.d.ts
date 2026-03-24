@@ -38,7 +38,7 @@ export interface PublicVideoMeta {
   'category' : VideoCategory,
 }
 export interface SectionVisit {
-  'duration' : bigint,
+  'duration' : [] | [bigint],
   'country' : CountryInfo,
   'section' : string,
   'timestamp' : Time,

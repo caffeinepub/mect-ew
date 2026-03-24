@@ -159,7 +159,7 @@ export default function SectionAnalyticsPanel() {
       const key = v.section.toLowerCase();
       if (!map.has(key)) map.set(key, { durations: [], countries: new Map() });
       const entry = map.get(key)!;
-      entry.durations.push(Number(v.duration));
+      entry.durations.push(Number(v.duration?.[0] ?? 0n));
       const cc = v.country.code.toUpperCase();
       if (!entry.countries.has(cc))
         entry.countries.set(cc, { name: v.country.name, count: 0 });
