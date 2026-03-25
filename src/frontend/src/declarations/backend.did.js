@@ -82,7 +82,7 @@ export const StoredMessage = IDL.Record({
 });
 export const SectionVisit = IDL.Record({
   'duration' : IDL.Opt(IDL.Nat),
-  'country' : CountryInfo,
+  'country' : IDL.Opt(CountryInfo),
   'section' : IDL.Text,
   'timestamp' : Time,
 });
@@ -430,7 +430,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const SectionVisit = IDL.Record({
     'duration' : IDL.Opt(IDL.Nat),
-    'country' : CountryInfo,
+    'country' : IDL.Opt(CountryInfo),
     'section' : IDL.Text,
     'timestamp' : Time,
   });

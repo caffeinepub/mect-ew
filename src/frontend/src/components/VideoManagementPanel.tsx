@@ -113,8 +113,8 @@ function aggregateByCountry(records: VideoViewRecord[]): CountryCount[] {
 
   for (const record of records) {
     // Treat missing, empty, or whitespace-only country code/name as "Unknown"
-    const rawCode = record.country?.code?.trim() ?? "";
-    const rawName = record.country?.name?.trim() ?? "";
+    const rawCode = record.country[0]?.code?.trim() ?? "";
+    const rawName = record.country[0]?.name?.trim() ?? "";
     const isUnknown = rawCode === "" || rawName === "";
 
     const key = isUnknown ? UNKNOWN_SENTINEL : rawCode;

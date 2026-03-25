@@ -160,9 +160,12 @@ export default function SectionAnalyticsPanel() {
       if (!map.has(key)) map.set(key, { durations: [], countries: new Map() });
       const entry = map.get(key)!;
       entry.durations.push(Number(v.duration?.[0] ?? 0n));
-      const cc = v.country.code.toUpperCase();
+      const cc = (v.country[0]?.code ?? "XX").toUpperCase();
       if (!entry.countries.has(cc))
-        entry.countries.set(cc, { name: v.country.name, count: 0 });
+        entry.countries.set(cc, {
+          name: v.country[0]?.name ?? "Desconocido",
+          count: 0,
+        });
       entry.countries.get(cc)!.count++;
     }
 
@@ -194,7 +197,9 @@ export default function SectionAnalyticsPanel() {
   const totalVisits = visits?.length ?? 0;
   const uniqueCountries = useMemo(() => {
     if (!visits) return 0;
-    return new Set(visits.map((v) => v.country.code.toUpperCase())).size;
+    return new Set(
+      visits.map((v) => (v.country[0]?.code ?? "XX").toUpperCase()),
+    ).size;
   }, [visits]);
 
   const recentVisits = useMemo(() => {
@@ -505,8 +510,8 @@ export default function SectionAnalyticsPanel() {
                       {getSectionLabel(v.section)}
                     </span>
                     <span className="text-gray-400 flex items-center gap-1">
-                      <span>{getFlag(v.country.code)}</span>
-                      <span>{v.country.name}</span>
+                      <span>{getFlag(v.country[0]?.code ?? "")}</span>
+                      <span>{v.country[0]?.name ?? "Desconocido"}</span>
                     </span>
                     <span className="text-gray-400">
                       {formatDuration(Number(v.duration))}

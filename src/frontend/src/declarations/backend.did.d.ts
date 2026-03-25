@@ -39,7 +39,7 @@ export interface PublicVideoMeta {
 }
 export interface SectionVisit {
   'duration' : [] | [bigint],
-  'country' : CountryInfo,
+  'country' : [] | [CountryInfo],
   'section' : string,
   'timestamp' : Time,
 }
@@ -104,7 +104,7 @@ export interface VideoMeta {
   'timestamp' : Time,
   'category' : VideoCategory,
 }
-export interface VideoViewRecord { 'country' : CountryInfo, 'timestamp' : Time }
+export interface VideoViewRecord { 'country' : [] | [CountryInfo], 'timestamp' : Time }
 export type PaymentServiceType = { 'consultoria' : null } |
   { 'mentoria' : null };
 export type PaymentStatus = { 'pending' : null } |

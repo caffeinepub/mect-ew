@@ -47,7 +47,7 @@ export interface VideoMeta {
     category: VideoCategory;
 }
 export interface VideoViewRecord {
-    country: CountryInfo;
+    country: [] | [CountryInfo];
     timestamp: Time;
 }
 export interface StoredMessage {
@@ -71,7 +71,7 @@ export interface http_request_result {
 }
 export interface SectionVisit {
     duration: [] | [bigint];
-    country: CountryInfo;
+    country: [] | [CountryInfo];
     section: string;
     timestamp: Time;
 }

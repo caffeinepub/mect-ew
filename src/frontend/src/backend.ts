@@ -152,8 +152,8 @@ export interface http_request_result {
     headers: Array<http_header>;
 }
 export interface SectionVisit {
-    duration: bigint;
-    country: CountryInfo;
+    duration: [] | [bigint];
+    country: [] | [CountryInfo];
     section: string;
     timestamp: Time;
 }
