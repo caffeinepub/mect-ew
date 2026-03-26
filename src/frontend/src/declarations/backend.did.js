@@ -248,7 +248,7 @@ export const idlService = IDL.Service({
     ),
   'getPendingVideos' : IDL.Func([], [IDL.Vec(VideoMeta)], ['query']),
   'getRecordingState' : IDL.Func([], [IDL.Bool], ['query']),
-  'getSectionVisitRecords' : IDL.Func([], [IDL.Vec(SectionVisit)], ['query']),
+  'getSectionVisitRecords' : IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Nat, SectionVisit))], ['query']),
   'getThumbnailMeta' : IDL.Func(
       [IDL.Text],
       [IDL.Opt(ThumbnailMeta)],
@@ -576,7 +576,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getPendingVideos' : IDL.Func([], [IDL.Vec(VideoMeta)], ['query']),
     'getRecordingState' : IDL.Func([], [IDL.Bool], ['query']),
-    'getSectionVisitRecords' : IDL.Func([], [IDL.Vec(SectionVisit)], ['query']),
+    'getSectionVisitRecords' : IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Nat, SectionVisit))], ['query']),
     'getThumbnailMeta' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(ThumbnailMeta)],

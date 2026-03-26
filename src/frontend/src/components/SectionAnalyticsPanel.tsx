@@ -514,7 +514,7 @@ export default function SectionAnalyticsPanel() {
                       <span>{v.country[0]?.name ?? "Desconocido"}</span>
                     </span>
                     <span className="text-gray-400">
-                      {formatDuration(Number(v.duration))}
+                      {formatDuration(Number(v.duration?.[0] ?? 0n))}
                     </span>
                     <span className="text-gray-500 text-xs">
                       {formatDate(v.timestamp)}

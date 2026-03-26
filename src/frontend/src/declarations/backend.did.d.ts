@@ -186,7 +186,7 @@ export interface _SERVICE {
   'getMessages' : ActorMethod<[[] | [FormType]], Array<StoredMessage>>,
   'getPendingVideos' : ActorMethod<[], Array<VideoMeta>>,
   'getRecordingState' : ActorMethod<[], boolean>,
-  'getSectionVisitRecords' : ActorMethod<[], Array<SectionVisit>>,
+  'getSectionVisitRecords' : ActorMethod<[], Array<[bigint, SectionVisit]>>,
   'getThumbnailMeta' : ActorMethod<[string], [] | [ThumbnailMeta]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getVideoMeta' : ActorMethod<[string], [] | [PublicVideoMeta]>,
