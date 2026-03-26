@@ -329,6 +329,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'deletePaymentRecord' : IDL.Func([IDL.Text], [], []),
+  'deleteSectionVisitRecord' : IDL.Func([IDL.Nat], [], []),
   'getPaymentRecords' : IDL.Func([], [IDL.Vec(PaymentRecord)], ['query']),
   'submitPaymentRecord' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],
@@ -665,6 +666,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'deletePaymentRecord' : IDL.Func([IDL.Text], [], []),
+  'deleteSectionVisitRecord' : IDL.Func([IDL.Nat], [], []),
   'getPaymentRecords' : IDL.Func([], [IDL.Vec(PaymentRecord)], ['query']),
     'submitPaymentRecord' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],

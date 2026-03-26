@@ -241,6 +241,7 @@ export interface _SERVICE {
     string
   >,
   'deletePaymentRecord' : ActorMethod<[string], undefined>,
+  'deleteSectionVisitRecord' : ActorMethod<[bigint], undefined>,
   'getPaymentRecords' : ActorMethod<[], Array<PaymentRecord>>,
   'submitPaymentRecord' : ActorMethod<[string, string, string, string, PaymentServiceType], string>,
   'updatePaymentStatus' : ActorMethod<[string, PaymentStatus, [] | [string]], undefined>,
