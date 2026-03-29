@@ -2,6 +2,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle } from "lucide-react";
+import { useState } from "react";
 import { VideoCategory } from "../backend";
 import ManualVideoUpload from "../components/ManualVideoUpload";
 import ScreenRecorder from "../components/ScreenRecorder";
@@ -23,6 +24,22 @@ export default function AnalysisPage() {
   useSectionTracker("analisis");
   const { identity } = useInternetIdentity();
   const { data: isAdmin, isLoading: isLoadingAdmin } = useIsCallerAdmin();
+
+  // Read deep-link params from URL
+  const searchParams = new URLSearchParams(window.location.search);
+  const videoIdParam = searchParams.get("v") || undefined;
+  const catParam = searchParams.get("cat");
+
+  // Determine initial tab: from URL param or default
+  const initialCategory = (() => {
+    if (catParam) {
+      const found = categories.find((c) => c.value === catParam);
+      if (found) return found.value;
+    }
+    return VideoCategory.divisas;
+  })();
+
+  const [activeCategory, setActiveCategory] = useState<string>(initialCategory);
 
   const isAuthenticated = !!identity;
   const showAdminTools = isAuthenticated && isAdmin;
@@ -108,7 +125,7 @@ export default function AnalysisPage() {
             )}
 
             <div className="mt-12">
-              <Tabs defaultValue={VideoCategory.divisas}>
+              <Tabs value={activeCategory} onValueChange={setActiveCategory}>
                 <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-8">
                   {categories.map((category) => (
                     <TabsTrigger key={category.value} value={category.value}>
@@ -119,7 +136,14 @@ export default function AnalysisPage() {
 
                 {categories.map((category) => (
                   <TabsContent key={category.value} value={category.value}>
-                    <CategoryVideoGallery category={category.value} />
+                    <CategoryVideoGallery
+                      category={category.value}
+                      autoOpenVideoId={
+                        activeCategory === category.value
+                          ? videoIdParam
+                          : undefined
+                      }
+                    />
                   </TabsContent>
                 ))}
               </Tabs>
@@ -131,8 +155,21 @@ export default function AnalysisPage() {
   );
 }
 
-function CategoryVideoGallery({ category }: { category: VideoCategory }) {
+function CategoryVideoGallery({
+  category,
+  autoOpenVideoId,
+}: {
+  category: VideoCategory;
+  autoOpenVideoId?: string;
+}) {
   const { data: videos = [], isLoading } = useGetVideosByCategory(category);
 
-  return <VideoGallery videos={videos} isLoading={isLoading} />;
+  return (
+    <VideoGallery
+      videos={videos}
+      isLoading={isLoading}
+      autoOpenVideoId={autoOpenVideoId}
+      currentCategory={category}
+    />
+  );
 }

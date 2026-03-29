@@ -6,21 +6,33 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, Play, Trash2 } from "lucide-react";
+import { Loader2, Mail, Play, Send, Share2, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { PublicVideoMeta } from "../backend";
 import { useActor } from "../hooks/useActor";
-import { useDeleteVideo } from "../hooks/useQueries";
-import { useIsCallerAdmin } from "../hooks/useQueries";
+import { useDeleteVideo, useIsCallerAdmin } from "../hooks/useQueries";
 
 interface VideoGalleryProps {
   videos: PublicVideoMeta[];
   isLoading: boolean;
+  autoOpenVideoId?: string;
+  currentCategory?: string;
 }
 
-export default function VideoGallery({ videos, isLoading }: VideoGalleryProps) {
+export default function VideoGallery({
+  videos,
+  isLoading,
+  autoOpenVideoId,
+  currentCategory,
+}: VideoGalleryProps) {
   const [selectedVideo, setSelectedVideo] = useState<PublicVideoMeta | null>(
     null,
   );
@@ -34,6 +46,16 @@ export default function VideoGallery({ videos, isLoading }: VideoGalleryProps) {
   const deleteVideoMutation = useDeleteVideo();
   const queryClient = useQueryClient();
 
+  // Auto-open video from URL param
+  useEffect(() => {
+    if (autoOpenVideoId && videos.length > 0) {
+      const target = videos.find((v) => v.id === autoOpenVideoId);
+      if (target) {
+        setSelectedVideo(target);
+      }
+    }
+  }, [autoOpenVideoId, videos]);
+
   useEffect(() => {
     if (selectedVideo && actor) {
       setLoadingBlob(true);
@@ -41,7 +63,6 @@ export default function VideoGallery({ videos, isLoading }: VideoGalleryProps) {
         .streamVideo(selectedVideo.id, null)
         .then((blob) => {
           setVideoBlob(blob);
-          // Invalidate view count queries after streaming completes (for admin)
           if (isAdmin) {
             queryClient.invalidateQueries({
               queryKey: ["videoViewCount", selectedVideo.id],
@@ -99,6 +120,33 @@ export default function VideoGallery({ videos, isLoading }: VideoGalleryProps) {
       console.error("Error deleting video:", error);
       toast.error("Error al eliminar el video");
     }
+  };
+
+  const buildShareLink = (video: PublicVideoMeta) => {
+    const base = `${window.location.origin}/analisis`;
+    const cat = currentCategory ? `&cat=${currentCategory}` : "";
+    return `${base}?v=${video.id}${cat}`;
+  };
+
+  const handleShare = (
+    channel: "whatsapp" | "telegram" | "email",
+    video: PublicVideoMeta,
+  ) => {
+    const link = buildShareLink(video);
+    const title = video.title || "Elliott Wave Analysis MECT EW";
+    const message = `Elliott Wave Analysis MECT EW\n${title}\n${link}`;
+
+    let url: string;
+    if (channel === "whatsapp") {
+      url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    } else if (channel === "telegram") {
+      url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(`Elliott Wave Analysis MECT EW - ${title}`)}`;
+    } else {
+      const subject = `Elliott Wave Analysis MECT EW - ${title}`;
+      url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    }
+
+    window.open(url, "_blank");
   };
 
   const formatDate = (timestamp: bigint) => {
@@ -198,28 +246,72 @@ export default function VideoGallery({ videos, isLoading }: VideoGalleryProps) {
                       <span>{formatDate(video.timestamp)}</span>
                     </div>
                     {isAdmin && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="mt-2 w-full"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(video.id);
-                        }}
-                        disabled={deleteVideoMutation.isPending}
-                      >
-                        {deleteVideoMutation.isPending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Eliminando...
-                          </>
-                        ) : (
-                          <>
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Eliminar
-                          </>
-                        )}
-                      </Button>
+                      <div className="mt-2 flex gap-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 border-border text-foreground hover:bg-muted"
+                              onClick={(e) => e.stopPropagation()}
+                              data-ocid="analysis.share_button"
+                            >
+                              <Share2 className="w-4 h-4 mr-2" />
+                              Compartir
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            className="bg-background border-border"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <DropdownMenuItem
+                              className="cursor-pointer hover:bg-muted"
+                              onSelect={() => handleShare("whatsapp", video)}
+                            >
+                              <span className="mr-2 text-base">📱</span>
+                              WhatsApp
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer hover:bg-muted"
+                              onSelect={() => handleShare("telegram", video)}
+                            >
+                              <Send className="w-4 h-4 mr-2" />
+                              Telegram
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer hover:bg-muted"
+                              onSelect={() => handleShare("email", video)}
+                            >
+                              <Mail className="w-4 h-4 mr-2" />
+                              Email
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(video.id);
+                          }}
+                          disabled={deleteVideoMutation.isPending}
+                          data-ocid="analysis.delete_button"
+                        >
+                          {deleteVideoMutation.isPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Eliminando...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Eliminar
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
