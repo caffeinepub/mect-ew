@@ -133,16 +133,17 @@ export default function VideoGallery({
     video: PublicVideoMeta,
   ) => {
     const link = buildShareLink(video);
-    const title = video.title || "Elliott Wave Analysis MECT EW";
-    const message = `Elliott Wave Analysis MECT EW\n${title}\n${link}`;
+    const title = video.title || "";
+    const titlePart = title ? `\n${title}` : "";
+    const message = `Elliott Wave Analysis MECT EW${titlePart}\n${link}`;
 
     let url: string;
     if (channel === "whatsapp") {
       url = `https://wa.me/?text=${encodeURIComponent(message)}`;
     } else if (channel === "telegram") {
-      url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(`Elliott Wave Analysis MECT EW - ${title}`)}`;
+      url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(`Elliott Wave Analysis MECT EW${title ? ` - ${title}` : ""}`)}`;
     } else {
-      const subject = `Elliott Wave Analysis MECT EW - ${title}`;
+      const subject = `Elliott Wave Analysis MECT EW${title ? ` - ${title}` : ""}`;
       url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
     }
 
