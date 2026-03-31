@@ -227,6 +227,10 @@ export interface _SERVICE {
     [string, ExternalBlob, bigint, VideoCategory, VideoFileType],
     string
   >,
+  'uploadManualVideoWithDate' : ActorMethod<
+    [string, ExternalBlob, bigint, VideoCategory, VideoFileType, [] | [bigint]],
+    string
+  >,
   'uploadThumbnail' : ActorMethod<
     [
       string,

@@ -316,6 +316,11 @@ export const idlService = IDL.Service({
       [IDL.Text],
       [],
     ),
+  'uploadManualVideoWithDate' : IDL.Func(
+      [IDL.Text, ExternalBlob, IDL.Nat, VideoCategory, VideoFileType, IDL.Opt(IDL.Int)],
+      [IDL.Text],
+      [],
+    ),
   'uploadThumbnail' : IDL.Func(
       [
         IDL.Text,
@@ -646,6 +651,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'uploadManualVideo' : IDL.Func(
         [IDL.Text, ExternalBlob, IDL.Nat, VideoCategory, VideoFileType],
+        [IDL.Text],
+        [],
+      ),
+    'uploadManualVideoWithDate' : IDL.Func(
+        [IDL.Text, ExternalBlob, IDL.Nat, VideoCategory, VideoFileType, IDL.Opt(IDL.Int)],
         [IDL.Text],
         [],
       ),
