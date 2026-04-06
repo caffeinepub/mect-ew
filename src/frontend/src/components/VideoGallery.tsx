@@ -20,7 +20,8 @@ import type { PublicVideoMeta } from "../backend";
 import { useActor } from "../hooks/useActor";
 import { useDeleteVideo, useIsCallerAdmin } from "../hooks/useQueries";
 
-const SHARE_TITLE = "MECT EW - Análisis Técnico de Mercados Financieros";
+const SITE_URL = "https://mectelliottwave.com";
+const SITE_TITLE = "MECT EW - Análisis Técnico de Mercados Financieros";
 
 interface VideoGalleryProps {
   videos: PublicVideoMeta[];
@@ -33,7 +34,7 @@ export default function VideoGallery({
   videos,
   isLoading,
   autoOpenVideoId,
-  currentCategory,
+  currentCategory: _currentCategory,
 }: VideoGalleryProps) {
   const [selectedVideo, setSelectedVideo] = useState<PublicVideoMeta | null>(
     null,
@@ -124,26 +125,19 @@ export default function VideoGallery({
     }
   };
 
-  const buildShareLink = (video: PublicVideoMeta) => {
-    const base = `${window.location.origin}/analisis`;
-    const cat = currentCategory ? `&cat=${currentCategory}` : "";
-    return `${base}?v=${video.id}${cat}`;
-  };
-
   const handleShare = (
     channel: "whatsapp" | "telegram" | "email",
-    video: PublicVideoMeta,
+    _video: PublicVideoMeta,
   ) => {
-    const link = buildShareLink(video);
-    const message = `${SHARE_TITLE}\n${link}`;
+    const message = `${SITE_TITLE}\n${SITE_URL}`;
 
     let url: string;
     if (channel === "whatsapp") {
       url = `https://wa.me/?text=${encodeURIComponent(message)}`;
     } else if (channel === "telegram") {
-      url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(SHARE_TITLE)}`;
+      url = `https://t.me/share/url?url=${encodeURIComponent(SITE_URL)}&text=${encodeURIComponent(SITE_TITLE)}`;
     } else {
-      url = `mailto:?subject=${encodeURIComponent(SHARE_TITLE)}&body=${encodeURIComponent(message)}`;
+      url = `mailto:?subject=${encodeURIComponent(SITE_TITLE)}&body=${encodeURIComponent(message)}`;
     }
 
     window.open(url, "_blank");
