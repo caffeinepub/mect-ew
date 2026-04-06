@@ -246,53 +246,58 @@ export default function VideoGallery({
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>{formatDate(video.timestamp)}</span>
                     </div>
-                    {isAdmin && (
-                      <div className="mt-2 flex gap-2">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 border-border text-foreground hover:bg-muted"
-                              onClick={(e) => e.stopPropagation()}
-                              data-ocid="analysis.share_button"
-                            >
-                              <Share2 className="w-4 h-4 mr-2" />
-                              Compartir
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            className="bg-background border-border"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <DropdownMenuItem
-                              className="cursor-pointer hover:bg-muted"
-                              onSelect={() => handleShare("whatsapp", video)}
-                            >
-                              <span className="mr-2 text-base">📱</span>
-                              WhatsApp
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer hover:bg-muted"
-                              onSelect={() => handleShare("telegram", video)}
-                            >
-                              <Send className="w-4 h-4 mr-2" />
-                              Telegram
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer hover:bg-muted"
-                              onSelect={() => handleShare("email", video)}
-                            >
-                              <Mail className="w-4 h-4 mr-2" />
-                              Email
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
 
+                    {/* Share button - visible to all visitors */}
+                    <div className="mt-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full border-border text-foreground hover:bg-muted"
+                            onClick={(e) => e.stopPropagation()}
+                            data-ocid="analysis.share_button"
+                          >
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Compartir
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          className="bg-background border-border"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <DropdownMenuItem
+                            className="cursor-pointer hover:bg-muted"
+                            onSelect={() => handleShare("whatsapp", video)}
+                          >
+                            <span className="mr-2 text-base">📱</span>
+                            WhatsApp
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer hover:bg-muted"
+                            onSelect={() => handleShare("telegram", video)}
+                          >
+                            <Send className="w-4 h-4 mr-2" />
+                            Telegram
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer hover:bg-muted"
+                            onSelect={() => handleShare("email", video)}
+                          >
+                            <Mail className="w-4 h-4 mr-2" />
+                            Email
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    {/* Delete button - admin only */}
+                    {isAdmin && (
+                      <div className="mt-1">
                         <Button
                           variant="destructive"
                           size="sm"
-                          className="flex-1"
+                          className="w-full"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(video.id);
