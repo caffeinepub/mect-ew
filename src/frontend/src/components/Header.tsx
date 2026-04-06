@@ -11,8 +11,13 @@ import { useNavigate } from "@tanstack/react-router";
 import { Mail, Menu, Send, Share2, Shield, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoSrc from "../../public/assets/Logo-4.png";
+// Import og-preview to ensure it is included in the build bundle
+import ogPreviewSrc from "../../public/assets/generated/og-preview.dim_1200x630.png";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useIsCallerAdmin } from "../hooks/useQueries";
+
+// Export so other modules can reference the og:image path
+export const OG_IMAGE_URL = `https://mectelliottwave.com${ogPreviewSrc}`;
 
 const SITE_URL = "https://mectelliottwave.com";
 const SITE_TITLE = "MECT EW - Análisis Técnico de Mercados Financieros";
