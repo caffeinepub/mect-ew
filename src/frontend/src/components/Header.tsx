@@ -1,12 +1,34 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Menu, Shield, X } from "lucide-react";
+import { Mail, Menu, Send, Share2, Shield, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoSrc from "../../public/assets/Logo-4.png";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useIsCallerAdmin } from "../hooks/useQueries";
+
+const SITE_URL = "https://mectelliottwave.com";
+const SITE_TITLE = "MECT EW - Análisis Técnico de Mercados Financieros";
+
+function handleShareSite(channel: "whatsapp" | "telegram" | "email") {
+  const message = `${SITE_TITLE}\n${SITE_URL}`;
+  let url: string;
+  if (channel === "whatsapp") {
+    url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  } else if (channel === "telegram") {
+    url = `https://t.me/share/url?url=${encodeURIComponent(SITE_URL)}&text=${encodeURIComponent(SITE_TITLE)}`;
+  } else {
+    url = `mailto:?subject=${encodeURIComponent(SITE_TITLE)}&body=${encodeURIComponent(message)}`;
+  }
+  window.open(url, "_blank");
+}
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -107,8 +129,46 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Auth and Admin Buttons */}
+          {/* Auth, Share and Admin Buttons */}
           <div className="hidden md:flex items-center space-x-2">
+            {/* Share site button - visible to all */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 text-white hover:text-white hover:bg-white/10"
+                  data-ocid="header.share_site_button"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Compartir
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-background border-border">
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-muted"
+                  onSelect={() => handleShareSite("whatsapp")}
+                >
+                  <span className="mr-2 text-base">📱</span>
+                  WhatsApp
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-muted"
+                  onSelect={() => handleShareSite("telegram")}
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Telegram
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-muted"
+                  onSelect={() => handleShareSite("email")}
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {isAuthenticated && !isLoadingAdmin && isAdmin && (
               <Button
                 variant="outline"
@@ -178,6 +238,47 @@ export default function Header() {
                   {item.label}
                 </Button>
               ))}
+
+              {/* Share site - mobile */}
+              <div className="px-1">
+                <p className="text-xs text-white/50 px-3 py-1">
+                  Compartir sitio
+                </p>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    handleShareSite("whatsapp");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="justify-start w-full text-white hover:bg-white/10 hover:text-white"
+                >
+                  <span className="mr-2 text-base">📱</span>
+                  WhatsApp
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    handleShareSite("telegram");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="justify-start w-full text-white hover:bg-white/10 hover:text-white"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Telegram
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    handleShareSite("email");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="justify-start w-full text-white hover:bg-white/10 hover:text-white"
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email
+                </Button>
+              </div>
+
               {isAuthenticated && !isLoadingAdmin && isAdmin && (
                 <Button
                   variant="outline"
