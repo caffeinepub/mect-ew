@@ -148,6 +148,13 @@ export default function MentoringPage() {
                   </span>{" "}
                   Consultar disponibilidad y aranceles de forma privada.
                 </p>
+
+                <p className="text-muted-foreground leading-relaxed">
+                  <span className="font-semibold text-foreground">Nota:</span>{" "}
+                  Las mentorías tienen un propósito estrictamente
+                  técnico-educativo y no constituyen recomendaciones de
+                  inversión.
+                </p>
               </div>
             </div>
 
