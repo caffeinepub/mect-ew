@@ -90,7 +90,7 @@ export default function AnalysisPage() {
 
                 <p className="text-muted-foreground leading-relaxed">
                   <span className="font-semibold text-foreground">Nota:</span>{" "}
-                  Los contenidos expuestos tienen un propósito estrictamente
+                  Los análisis expuestos tienen un propósito estrictamente
                   técnico-educativo y no constituyen recomendaciones de
                   inversión.
                 </p>
