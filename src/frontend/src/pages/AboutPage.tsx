@@ -35,8 +35,7 @@ export default function AboutPage() {
                 En mi faceta educativa, mi objetivo es transmitir la complejidad
                 de la Teoría de las Ondas de Elliott de manera funcional,
                 dotando al analista de una capacidad crítica para validar
-                escenarios de alta probabilidad y operar bajo un marco técnico
-                robusto y profesional.
+                escenarios de alta probabilidad.
               </p>
             </div>
           </div>
