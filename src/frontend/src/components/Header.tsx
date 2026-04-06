@@ -12,7 +12,7 @@ import { Mail, Menu, Share2, Shield, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoSrc from "../../public/assets/Logo-4.png";
 // Import og-logo-preview to ensure it is included in the build bundle
-import ogPreviewSrc from "../../public/assets/generated/og-logo-preview.dim_1200x630.png";
+import ogPreviewSrc from "../../public/assets/generated/og-logo-mectew.dim_1200x630.png";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useIsCallerAdmin } from "../hooks/useQueries";
 
