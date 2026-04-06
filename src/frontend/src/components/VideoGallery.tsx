@@ -20,6 +20,8 @@ import type { PublicVideoMeta } from "../backend";
 import { useActor } from "../hooks/useActor";
 import { useDeleteVideo, useIsCallerAdmin } from "../hooks/useQueries";
 
+const SHARE_TITLE = "MECT EW - Análisis Técnico de Mercados Financieros";
+
 interface VideoGalleryProps {
   videos: PublicVideoMeta[];
   isLoading: boolean;
@@ -133,18 +135,15 @@ export default function VideoGallery({
     video: PublicVideoMeta,
   ) => {
     const link = buildShareLink(video);
-    const title = video.title || "";
-    const titlePart = title ? `\n${title}` : "";
-    const message = `Elliott Wave Analysis MECT EW${titlePart}\n${link}`;
+    const message = `${SHARE_TITLE}\n${link}`;
 
     let url: string;
     if (channel === "whatsapp") {
       url = `https://wa.me/?text=${encodeURIComponent(message)}`;
     } else if (channel === "telegram") {
-      url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(`Elliott Wave Analysis MECT EW${title ? ` - ${title}` : ""}`)}`;
+      url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(SHARE_TITLE)}`;
     } else {
-      const subject = `Elliott Wave Analysis MECT EW${title ? ` - ${title}` : ""}`;
-      url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+      url = `mailto:?subject=${encodeURIComponent(SHARE_TITLE)}&body=${encodeURIComponent(message)}`;
     }
 
     window.open(url, "_blank");
