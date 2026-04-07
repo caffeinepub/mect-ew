@@ -20,6 +20,7 @@ export default function IcpPaymentWidget({ serviceType }: Props) {
     email: "",
     txnHash: "",
     amountIcp: "",
+    txnDate: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -33,7 +34,13 @@ export default function IcpPaymentWidget({ serviceType }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.txnHash || !form.amountIcp) {
+    if (
+      !form.name ||
+      !form.email ||
+      !form.txnHash ||
+      !form.amountIcp ||
+      !form.txnDate
+    ) {
       setError("Por favor completá todos los campos.");
       return;
     }
@@ -49,6 +56,7 @@ export default function IcpPaymentWidget({ serviceType }: Props) {
         form.email,
         form.txnHash,
         form.amountIcp,
+        form.txnDate,
         serviceType,
       );
       setSubmitted(true);
@@ -189,6 +197,23 @@ export default function IcpPaymentWidget({ serviceType }: Props) {
                 }
                 placeholder="Hash de la transacción ICP"
                 className="rounded-none font-mono text-xs"
+              />
+            </div>
+            <div className="space-y-1">
+              <label
+                htmlFor="icp-date"
+                className="text-xs text-muted-foreground"
+              >
+                Fecha de transacción
+              </label>
+              <Input
+                id="icp-date"
+                type="date"
+                value={form.txnDate}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, txnDate: e.target.value }))
+                }
+                className="rounded-none"
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}

@@ -47,7 +47,7 @@ import {
 import React, { useState, useMemo } from "react";
 import {
   ExternalBlob,
-  Variant_jpg_png_webp,
+  ImageFormat,
   VideoCategory,
   type VideoMeta,
   type VideoViewRecord,
@@ -340,12 +340,12 @@ function VideoRow({ video, onDelete, isDeleting }: VideoRowProps) {
       const extBlob = ExternalBlob.fromBytes(uint8Array);
 
       const ext = file.name.split(".").pop()?.toLowerCase();
-      const fmt: Variant_jpg_png_webp =
+      const fmt: ImageFormat =
         ext === "png"
-          ? Variant_jpg_png_webp.png
+          ? ImageFormat.png
           : ext === "webp"
-            ? Variant_jpg_png_webp.webp
-            : Variant_jpg_png_webp.jpg;
+            ? ImageFormat.webp
+            : ImageFormat.jpg;
 
       await uploadThumbnailMutation.mutateAsync({
         videoId: video.id,

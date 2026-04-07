@@ -10,6 +10,19 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface BankTransferRecord {
+  'id' : string,
+  'status' : PaymentStatus,
+  'serviceType' : PaymentServiceType,
+  'transferDate' : string,
+  'name' : string,
+  'email' : string,
+  'bankName' : string,
+  'referenceNote' : string,
+  'notes' : [] | [string],
+  'timestamp' : Time,
+  'amountUsd' : string,
+}
 export interface ContactForm {
   'name' : string,
   'email' : string,
@@ -27,6 +40,23 @@ export type ImageFormat = { 'jpg' : null } |
   { 'webp' : null };
 export type MessageStatus = { 'pending' : null } |
   { 'replied' : null };
+export interface PaymentRecord {
+  'id' : string,
+  'status' : PaymentStatus,
+  'serviceType' : PaymentServiceType,
+  'name' : string,
+  'txnDate' : string,
+  'txnHash' : string,
+  'email' : string,
+  'notes' : [] | [string],
+  'timestamp' : Time,
+  'amountIcp' : string,
+}
+export type PaymentServiceType = { 'consultoria' : null } |
+  { 'mentoria' : null };
+export type PaymentStatus = { 'pending' : null } |
+  { 'rejected' : null } |
+  { 'confirmed' : null };
 export interface PublicVideoMeta {
   'id' : string,
   'title' : string,
@@ -38,8 +68,8 @@ export interface PublicVideoMeta {
   'category' : VideoCategory,
 }
 export interface SectionVisit {
-  'duration' : [] | [bigint],
-  'country' : [] | [CountryInfo],
+  'duration' : bigint,
+  'country' : CountryInfo,
   'section' : string,
   'timestamp' : Time,
 }
@@ -104,32 +134,15 @@ export interface VideoMeta {
   'timestamp' : Time,
   'category' : VideoCategory,
 }
-export interface VideoViewRecord { 'country' : [] | [CountryInfo], 'timestamp' : Time }
-export type PaymentServiceType = { 'consultoria' : null } |
-  { 'mentoria' : null };
-export type PaymentStatus = { 'pending' : null } |
-  { 'confirmed' : null } |
-  { 'rejected' : null };
-export interface PaymentRecord {
-  'id' : string,
-  'name' : string,
-  'email' : string,
-  'txnHash' : string,
-  'amountIcp' : string,
-  'serviceType' : PaymentServiceType,
-  'status' : PaymentStatus,
-  'timestamp' : Time,
-  'notes' : [] | [string],
-}
-
-export interface _CaffeineStorageCreateCertificateResult {
+export interface VideoViewRecord { 'country' : CountryInfo, 'timestamp' : Time }
+export interface _ImmutableObjectStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
 }
-export interface _CaffeineStorageRefillInformation {
+export interface _ImmutableObjectStorageRefillInformation {
   'proposed_top_up_amount' : [] | [bigint],
 }
-export interface _CaffeineStorageRefillResult {
+export interface _ImmutableObjectStorageRefillResult {
   'success' : [] | [boolean],
   'topped_up_amount' : [] | [bigint],
 }
@@ -140,28 +153,34 @@ export interface http_request_result {
   'headers' : Array<http_header>,
 }
 export interface _SERVICE {
-  '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
-  '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
-  '_caffeineStorageConfirmBlobDeletion' : ActorMethod<
+  '_immutableObjectStorageBlobsAreLive' : ActorMethod<
+    [Array<Uint8Array>],
+    Array<boolean>
+  >,
+  '_immutableObjectStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
+  '_immutableObjectStorageConfirmBlobDeletion' : ActorMethod<
     [Array<Uint8Array>],
     undefined
   >,
-  '_caffeineStorageCreateCertificate' : ActorMethod<
+  '_immutableObjectStorageCreateCertificate' : ActorMethod<
     [string],
-    _CaffeineStorageCreateCertificateResult
+    _ImmutableObjectStorageCreateCertificateResult
   >,
-  '_caffeineStorageRefillCashier' : ActorMethod<
-    [[] | [_CaffeineStorageRefillInformation]],
-    _CaffeineStorageRefillResult
+  '_immutableObjectStorageRefillCashier' : ActorMethod<
+    [[] | [_ImmutableObjectStorageRefillInformation]],
+    _ImmutableObjectStorageRefillResult
   >,
-  '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
-  '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  '_immutableObjectStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
+  '_initializeAccessControl' : ActorMethod<[], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'bulkDeleteVideos' : ActorMethod<[Array<string>], undefined>,
   'bulkMoveVideosToCategory' : ActorMethod<[Array<string>, string], undefined>,
   'bulkRecordViews' : ActorMethod<[Array<[string, CountryInfo]>], undefined>,
+  'deleteBankTransferRecord' : ActorMethod<[string], undefined>,
   'deleteCustomThumbnail' : ActorMethod<[string, string], undefined>,
   'deleteMessage' : ActorMethod<[string], undefined>,
+  'deletePaymentRecord' : ActorMethod<[string], undefined>,
+  'deleteSectionVisitRecord' : ActorMethod<[bigint], undefined>,
   'deleteVideo' : ActorMethod<[string], undefined>,
   'downloadBlob' : ActorMethod<[ExternalBlob], ExternalBlob>,
   'downloadVideoBlob' : ActorMethod<[string], [] | [ExternalBlob]>,
@@ -170,6 +189,7 @@ export interface _SERVICE {
   'getAdminVideos' : ActorMethod<[], Array<VideoMeta>>,
   'getAdminVideosByCategory' : ActorMethod<[VideoCategory], Array<VideoMeta>>,
   'getAllVideos' : ActorMethod<[], Array<PublicVideoMeta>>,
+  'getBankTransferRecords' : ActorMethod<[], Array<BankTransferRecord>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCustomDomainStatus' : ActorMethod<
@@ -184,6 +204,7 @@ export interface _SERVICE {
     }
   >,
   'getMessages' : ActorMethod<[[] | [FormType]], Array<StoredMessage>>,
+  'getPaymentRecords' : ActorMethod<[], Array<PaymentRecord>>,
   'getPendingVideos' : ActorMethod<[], Array<VideoMeta>>,
   'getRecordingState' : ActorMethod<[], boolean>,
   'getSectionVisitRecords' : ActorMethod<[], Array<[bigint, SectionVisit]>>,
@@ -210,8 +231,24 @@ export interface _SERVICE {
     [string, [] | [CountryInfo]],
     [] | [ExternalBlob]
   >,
+  'submitBankTransferRecord' : ActorMethod<
+    [string, string, string, string, string, string, PaymentServiceType],
+    string
+  >,
   'submitContactForm' : ActorMethod<[ContactForm, FormType], string>,
+  'submitPaymentRecord' : ActorMethod<
+    [string, string, string, string, string, PaymentServiceType],
+    string
+  >,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
+  'updateBankTransferStatus' : ActorMethod<
+    [string, PaymentStatus, [] | [string]],
+    undefined
+  >,
+  'updatePaymentStatus' : ActorMethod<
+    [string, PaymentStatus, [] | [string]],
+    undefined
+  >,
   'updateVideoTitle' : ActorMethod<[string, string], undefined>,
   'uploadCustomThumbnail' : ActorMethod<
     [
@@ -244,11 +281,6 @@ export interface _SERVICE {
     ],
     string
   >,
-  'deletePaymentRecord' : ActorMethod<[string], undefined>,
-  'deleteSectionVisitRecord' : ActorMethod<[bigint], undefined>,
-  'getPaymentRecords' : ActorMethod<[], Array<PaymentRecord>>,
-  'submitPaymentRecord' : ActorMethod<[string, string, string, string, PaymentServiceType], string>,
-  'updatePaymentStatus' : ActorMethod<[string, PaymentStatus, [] | [string]], undefined>,
   'uploadVideo' : ActorMethod<
     [string, ExternalBlob, bigint, VideoCategory],
     string

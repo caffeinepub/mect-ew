@@ -36,6 +36,7 @@ function IcpForm({ serviceType }: { serviceType: PaymentServiceType }) {
     email: "",
     txnHash: "",
     amountIcp: "",
+    txnDate: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -49,7 +50,13 @@ function IcpForm({ serviceType }: { serviceType: PaymentServiceType }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.txnHash || !form.amountIcp) {
+    if (
+      !form.name ||
+      !form.email ||
+      !form.txnHash ||
+      !form.amountIcp ||
+      !form.txnDate
+    ) {
       setError("Por favor completá todos los campos.");
       return;
     }
@@ -65,6 +72,7 @@ function IcpForm({ serviceType }: { serviceType: PaymentServiceType }) {
         form.email,
         form.txnHash,
         form.amountIcp,
+        form.txnDate,
         serviceType,
       );
       setSubmitted(true);
@@ -200,6 +208,24 @@ function IcpForm({ serviceType }: { serviceType: PaymentServiceType }) {
                 placeholder="Hash de la transacción ICP"
                 className="rounded-none font-mono text-xs"
                 data-ocid="payment.icp.hash.input"
+              />
+            </div>
+            <div className="space-y-1">
+              <label
+                htmlFor="icp-date"
+                className="text-xs text-muted-foreground"
+              >
+                Fecha de transacción
+              </label>
+              <Input
+                id="icp-date"
+                type="date"
+                value={form.txnDate}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, txnDate: e.target.value }))
+                }
+                className="rounded-none"
+                data-ocid="payment.icp.date.input"
               />
             </div>
             {error && (

@@ -185,7 +185,7 @@ export default function PaymentsPanel() {
                     <span className="font-semibold">{p.amountIcp} ICP</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Fecha: </span>
+                    <span className="text-muted-foreground">Registrado: </span>
                     <span>
                       {new Date(
                         Number(p.timestamp) / 1_000_000,
@@ -198,6 +198,14 @@ export default function PaymentsPanel() {
                       })}
                     </span>
                   </div>
+                  {p.txnDate && (
+                    <div>
+                      <span className="text-muted-foreground">
+                        Fecha de transacción:{" "}
+                      </span>
+                      <span>{p.txnDate}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>

@@ -8,14 +8,14 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const _CaffeineStorageCreateCertificateResult = IDL.Record({
+export const _ImmutableObjectStorageCreateCertificateResult = IDL.Record({
   'method' : IDL.Text,
   'blob_hash' : IDL.Text,
 });
-export const _CaffeineStorageRefillInformation = IDL.Record({
+export const _ImmutableObjectStorageRefillInformation = IDL.Record({
   'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
 });
-export const _CaffeineStorageRefillResult = IDL.Record({
+export const _ImmutableObjectStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
@@ -60,6 +60,28 @@ export const PublicVideoMeta = IDL.Record({
   'timestamp' : Time,
   'category' : VideoCategory,
 });
+export const PaymentStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'rejected' : IDL.Null,
+  'confirmed' : IDL.Null,
+});
+export const PaymentServiceType = IDL.Variant({
+  'consultoria' : IDL.Null,
+  'mentoria' : IDL.Null,
+});
+export const BankTransferRecord = IDL.Record({
+  'id' : IDL.Text,
+  'status' : PaymentStatus,
+  'serviceType' : PaymentServiceType,
+  'transferDate' : IDL.Text,
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'bankName' : IDL.Text,
+  'referenceNote' : IDL.Text,
+  'notes' : IDL.Opt(IDL.Text),
+  'timestamp' : Time,
+  'amountUsd' : IDL.Text,
+});
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 export const FormType = IDL.Variant({
   'contacto' : IDL.Null,
@@ -80,9 +102,21 @@ export const StoredMessage = IDL.Record({
   'timestamp' : Time,
   'reply' : IDL.Opt(IDL.Text),
 });
+export const PaymentRecord = IDL.Record({
+  'id' : IDL.Text,
+  'status' : PaymentStatus,
+  'serviceType' : PaymentServiceType,
+  'name' : IDL.Text,
+  'txnDate' : IDL.Text,
+  'txnHash' : IDL.Text,
+  'email' : IDL.Text,
+  'notes' : IDL.Opt(IDL.Text),
+  'timestamp' : Time,
+  'amountIcp' : IDL.Text,
+});
 export const SectionVisit = IDL.Record({
-  'duration' : IDL.Opt(IDL.Nat),
-  'country' : IDL.Opt(CountryInfo),
+  'duration' : IDL.Nat,
+  'country' : CountryInfo,
   'section' : IDL.Text,
   'timestamp' : Time,
 });
@@ -144,69 +178,34 @@ export const VideoFileType = IDL.Variant({
   'webm' : IDL.Null,
 });
 
-export const PaymentServiceType = IDL.Variant({
-  'consultoria' : IDL.Null,
-  'mentoria' : IDL.Null,
-});
-export const PaymentStatus = IDL.Variant({
-  'pending' : IDL.Null,
-  'confirmed' : IDL.Null,
-  'rejected' : IDL.Null,
-});
-export const PaymentRecord = IDL.Record({
-  'id' : IDL.Text,
-  'name' : IDL.Text,
-  'email' : IDL.Text,
-  'txnHash' : IDL.Text,
-  'amountIcp' : IDL.Text,
-  'serviceType' : PaymentServiceType,
-  'status' : PaymentStatus,
-  'timestamp' : Time,
-  'notes' : IDL.Opt(IDL.Text),
-});
-
-export const BankTransferRecord = IDL.Record({
-  'id' : IDL.Text,
-  'name' : IDL.Text,
-  'email' : IDL.Text,
-  'amountUsd' : IDL.Text,
-  'bankName' : IDL.Text,
-  'transferDate' : IDL.Text,
-  'referenceNote' : IDL.Text,
-  'serviceType' : PaymentServiceType,
-  'status' : PaymentStatus,
-  'timestamp' : Time,
-  'notes' : IDL.Opt(IDL.Text),
-});
-
 export const idlService = IDL.Service({
-  '_caffeineStorageBlobIsLive' : IDL.Func(
-      [IDL.Vec(IDL.Nat8)],
-      [IDL.Bool],
+  '_immutableObjectStorageBlobsAreLive' : IDL.Func(
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      [IDL.Vec(IDL.Bool)],
       ['query'],
     ),
-  '_caffeineStorageBlobsToDelete' : IDL.Func(
+  '_immutableObjectStorageBlobsToDelete' : IDL.Func(
       [],
       [IDL.Vec(IDL.Vec(IDL.Nat8))],
       ['query'],
     ),
-  '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+  '_immutableObjectStorageConfirmBlobDeletion' : IDL.Func(
       [IDL.Vec(IDL.Vec(IDL.Nat8))],
       [],
       [],
     ),
-  '_caffeineStorageCreateCertificate' : IDL.Func(
+  '_immutableObjectStorageCreateCertificate' : IDL.Func(
       [IDL.Text],
-      [_CaffeineStorageCreateCertificateResult],
+      [_ImmutableObjectStorageCreateCertificateResult],
       [],
     ),
-  '_caffeineStorageRefillCashier' : IDL.Func(
-      [IDL.Opt(_CaffeineStorageRefillInformation)],
-      [_CaffeineStorageRefillResult],
+  '_immutableObjectStorageRefillCashier' : IDL.Func(
+      [IDL.Opt(_ImmutableObjectStorageRefillInformation)],
+      [_ImmutableObjectStorageRefillResult],
       [],
     ),
-  '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
-  '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  '_immutableObjectStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
+  '_initializeAccessControl' : IDL.Func([], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'bulkDeleteVideos' : IDL.Func([IDL.Vec(IDL.Text)], [], []),
   'bulkMoveVideosToCategory' : IDL.Func([IDL.Vec(IDL.Text), IDL.Text], [], []),
@@ -215,8 +214,11 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'deleteBankTransferRecord' : IDL.Func([IDL.Text], [], []),
   'deleteCustomThumbnail' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'deleteMessage' : IDL.Func([IDL.Text], [], []),
+  'deletePaymentRecord' : IDL.Func([IDL.Text], [], []),
+  'deleteSectionVisitRecord' : IDL.Func([IDL.Nat], [], []),
   'deleteVideo' : IDL.Func([IDL.Text], [], []),
   'downloadBlob' : IDL.Func([ExternalBlob], [ExternalBlob], ['query']),
   'downloadVideoBlob' : IDL.Func(
@@ -237,6 +239,11 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getAllVideos' : IDL.Func([], [IDL.Vec(PublicVideoMeta)], ['query']),
+  'getBankTransferRecords' : IDL.Func(
+      [],
+      [IDL.Vec(BankTransferRecord)],
+      ['query'],
+    ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCustomDomainStatus' : IDL.Func(
@@ -260,9 +267,14 @@ export const idlService = IDL.Service({
       [IDL.Vec(StoredMessage)],
       ['query'],
     ),
+  'getPaymentRecords' : IDL.Func([], [IDL.Vec(PaymentRecord)], ['query']),
   'getPendingVideos' : IDL.Func([], [IDL.Vec(VideoMeta)], ['query']),
   'getRecordingState' : IDL.Func([], [IDL.Bool], ['query']),
-  'getSectionVisitRecords' : IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Nat, SectionVisit))], ['query']),
+  'getSectionVisitRecords' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Nat, SectionVisit))],
+      ['query'],
+    ),
   'getThumbnailMeta' : IDL.Func(
       [IDL.Text],
       [IDL.Opt(ThumbnailMeta)],
@@ -307,11 +319,39 @@ export const idlService = IDL.Service({
       [IDL.Opt(ExternalBlob)],
       [],
     ),
+  'submitBankTransferRecord' : IDL.Func(
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        PaymentServiceType,
+      ],
+      [IDL.Text],
+      [],
+    ),
   'submitContactForm' : IDL.Func([ContactForm, FormType], [IDL.Text], []),
+  'submitPaymentRecord' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],
+      [IDL.Text],
+      [],
+    ),
   'transform' : IDL.Func(
       [TransformationInput],
       [TransformationOutput],
       ['query'],
+    ),
+  'updateBankTransferStatus' : IDL.Func(
+      [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
+      [],
+      [],
+    ),
+  'updatePaymentStatus' : IDL.Func(
+      [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
+      [],
+      [],
     ),
   'updateVideoTitle' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'uploadCustomThumbnail' : IDL.Func(
@@ -331,7 +371,14 @@ export const idlService = IDL.Service({
       [],
     ),
   'uploadManualVideoWithDate' : IDL.Func(
-      [IDL.Text, ExternalBlob, IDL.Nat, VideoCategory, VideoFileType, IDL.Opt(IDL.Int)],
+      [
+        IDL.Text,
+        ExternalBlob,
+        IDL.Nat,
+        VideoCategory,
+        VideoFileType,
+        IDL.Opt(IDL.Int),
+      ],
       [IDL.Text],
       [],
     ),
@@ -347,19 +394,6 @@ export const idlService = IDL.Service({
       [IDL.Text],
       [],
     ),
-  'deletePaymentRecord' : IDL.Func([IDL.Text], [], []),
-  'deleteSectionVisitRecord' : IDL.Func([IDL.Nat], [], []),
-  'getPaymentRecords' : IDL.Func([], [IDL.Vec(PaymentRecord)], ['query']),
-  'submitPaymentRecord' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],
-      [IDL.Text],
-      [],
-    ),
-  'updatePaymentStatus' : IDL.Func(
-      [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
-      [],
-      [],
-    ),
   'uploadVideo' : IDL.Func(
       [IDL.Text, ExternalBlob, IDL.Nat, VideoCategory],
       [IDL.Text],
@@ -370,14 +404,14 @@ export const idlService = IDL.Service({
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  const _CaffeineStorageCreateCertificateResult = IDL.Record({
+  const _ImmutableObjectStorageCreateCertificateResult = IDL.Record({
     'method' : IDL.Text,
     'blob_hash' : IDL.Text,
   });
-  const _CaffeineStorageRefillInformation = IDL.Record({
+  const _ImmutableObjectStorageRefillInformation = IDL.Record({
     'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
   });
-  const _CaffeineStorageRefillResult = IDL.Record({
+  const _ImmutableObjectStorageRefillResult = IDL.Record({
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
@@ -428,6 +462,28 @@ export const idlFactory = ({ IDL }) => {
     'timestamp' : Time,
     'category' : VideoCategory,
   });
+  const PaymentStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'rejected' : IDL.Null,
+    'confirmed' : IDL.Null,
+  });
+  const PaymentServiceType = IDL.Variant({
+    'consultoria' : IDL.Null,
+    'mentoria' : IDL.Null,
+  });
+  const BankTransferRecord = IDL.Record({
+    'id' : IDL.Text,
+    'status' : PaymentStatus,
+    'serviceType' : PaymentServiceType,
+    'transferDate' : IDL.Text,
+    'name' : IDL.Text,
+    'email' : IDL.Text,
+    'bankName' : IDL.Text,
+    'referenceNote' : IDL.Text,
+    'notes' : IDL.Opt(IDL.Text),
+    'timestamp' : Time,
+    'amountUsd' : IDL.Text,
+  });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
   const FormType = IDL.Variant({
     'contacto' : IDL.Null,
@@ -448,9 +504,21 @@ export const idlFactory = ({ IDL }) => {
     'timestamp' : Time,
     'reply' : IDL.Opt(IDL.Text),
   });
+  const PaymentRecord = IDL.Record({
+    'id' : IDL.Text,
+    'status' : PaymentStatus,
+    'serviceType' : PaymentServiceType,
+    'name' : IDL.Text,
+    'txnDate' : IDL.Text,
+    'txnHash' : IDL.Text,
+    'email' : IDL.Text,
+    'notes' : IDL.Opt(IDL.Text),
+    'timestamp' : Time,
+    'amountIcp' : IDL.Text,
+  });
   const SectionVisit = IDL.Record({
-    'duration' : IDL.Opt(IDL.Nat),
-    'country' : IDL.Opt(CountryInfo),
+    'duration' : IDL.Nat,
+    'country' : CountryInfo,
     'section' : IDL.Text,
     'timestamp' : Time,
   });
@@ -510,33 +578,33 @@ export const idlFactory = ({ IDL }) => {
   });
   
   return IDL.Service({
-    '_caffeineStorageBlobIsLive' : IDL.Func(
-        [IDL.Vec(IDL.Nat8)],
-        [IDL.Bool],
+    '_immutableObjectStorageBlobsAreLive' : IDL.Func(
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        [IDL.Vec(IDL.Bool)],
         ['query'],
       ),
-    '_caffeineStorageBlobsToDelete' : IDL.Func(
+    '_immutableObjectStorageBlobsToDelete' : IDL.Func(
         [],
         [IDL.Vec(IDL.Vec(IDL.Nat8))],
         ['query'],
       ),
-    '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+    '_immutableObjectStorageConfirmBlobDeletion' : IDL.Func(
         [IDL.Vec(IDL.Vec(IDL.Nat8))],
         [],
         [],
       ),
-    '_caffeineStorageCreateCertificate' : IDL.Func(
+    '_immutableObjectStorageCreateCertificate' : IDL.Func(
         [IDL.Text],
-        [_CaffeineStorageCreateCertificateResult],
+        [_ImmutableObjectStorageCreateCertificateResult],
         [],
       ),
-    '_caffeineStorageRefillCashier' : IDL.Func(
-        [IDL.Opt(_CaffeineStorageRefillInformation)],
-        [_CaffeineStorageRefillResult],
+    '_immutableObjectStorageRefillCashier' : IDL.Func(
+        [IDL.Opt(_ImmutableObjectStorageRefillInformation)],
+        [_ImmutableObjectStorageRefillResult],
         [],
       ),
-    '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
-    '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    '_immutableObjectStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
+    '_initializeAccessControl' : IDL.Func([], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'bulkDeleteVideos' : IDL.Func([IDL.Vec(IDL.Text)], [], []),
     'bulkMoveVideosToCategory' : IDL.Func(
@@ -549,8 +617,11 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'deleteBankTransferRecord' : IDL.Func([IDL.Text], [], []),
     'deleteCustomThumbnail' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'deleteMessage' : IDL.Func([IDL.Text], [], []),
+    'deletePaymentRecord' : IDL.Func([IDL.Text], [], []),
+    'deleteSectionVisitRecord' : IDL.Func([IDL.Nat], [], []),
     'deleteVideo' : IDL.Func([IDL.Text], [], []),
     'downloadBlob' : IDL.Func([ExternalBlob], [ExternalBlob], ['query']),
     'downloadVideoBlob' : IDL.Func(
@@ -571,6 +642,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getAllVideos' : IDL.Func([], [IDL.Vec(PublicVideoMeta)], ['query']),
+    'getBankTransferRecords' : IDL.Func(
+        [],
+        [IDL.Vec(BankTransferRecord)],
+        ['query'],
+      ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCustomDomainStatus' : IDL.Func(
@@ -594,9 +670,14 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(StoredMessage)],
         ['query'],
       ),
+    'getPaymentRecords' : IDL.Func([], [IDL.Vec(PaymentRecord)], ['query']),
     'getPendingVideos' : IDL.Func([], [IDL.Vec(VideoMeta)], ['query']),
     'getRecordingState' : IDL.Func([], [IDL.Bool], ['query']),
-    'getSectionVisitRecords' : IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Nat, SectionVisit))], ['query']),
+    'getSectionVisitRecords' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Nat, SectionVisit))],
+        ['query'],
+      ),
     'getThumbnailMeta' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(ThumbnailMeta)],
@@ -645,11 +726,39 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(ExternalBlob)],
         [],
       ),
+    'submitBankTransferRecord' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          PaymentServiceType,
+        ],
+        [IDL.Text],
+        [],
+      ),
     'submitContactForm' : IDL.Func([ContactForm, FormType], [IDL.Text], []),
+    'submitPaymentRecord' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],
+        [IDL.Text],
+        [],
+      ),
     'transform' : IDL.Func(
         [TransformationInput],
         [TransformationOutput],
         ['query'],
+      ),
+    'updateBankTransferStatus' : IDL.Func(
+        [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
+        [],
+        [],
+      ),
+    'updatePaymentStatus' : IDL.Func(
+        [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
+        [],
+        [],
       ),
     'updateVideoTitle' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'uploadCustomThumbnail' : IDL.Func(
@@ -669,7 +778,14 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'uploadManualVideoWithDate' : IDL.Func(
-        [IDL.Text, ExternalBlob, IDL.Nat, VideoCategory, VideoFileType, IDL.Opt(IDL.Int)],
+        [
+          IDL.Text,
+          ExternalBlob,
+          IDL.Nat,
+          VideoCategory,
+          VideoFileType,
+          IDL.Opt(IDL.Int),
+        ],
         [IDL.Text],
         [],
       ),
@@ -689,31 +805,6 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Text],
         [],
       ),
-    'deletePaymentRecord' : IDL.Func([IDL.Text], [], []),
-  'deleteSectionVisitRecord' : IDL.Func([IDL.Nat], [], []),
-  'getPaymentRecords' : IDL.Func([], [IDL.Vec(PaymentRecord)], ['query']),
-    'submitPaymentRecord' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],
-        [IDL.Text],
-        [],
-      ),
-    'updatePaymentStatus' : IDL.Func(
-        [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
-        [],
-        [],
-      ),
-  'submitBankTransferRecord' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],
-      [IDL.Text],
-      [],
-    ),
-  'getBankTransferRecords' : IDL.Func([], [IDL.Vec(BankTransferRecord)], ['query']),
-  'updateBankTransferStatus' : IDL.Func(
-      [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
-      [],
-      [],
-    ),
-  'deleteBankTransferRecord' : IDL.Func([IDL.Text], [], []),
     'uploadVideo' : IDL.Func(
         [IDL.Text, ExternalBlob, IDL.Nat, VideoCategory],
         [IDL.Text],

@@ -7,16 +7,18 @@ import Int "mo:core/Int";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Array "mo:core/Array";
-import MixinStorage "blob-storage/Mixin";
-import Storage "blob-storage/Storage";
-import AccessControl "authorization/access-control";
-import MixinAuthorization "authorization/MixinAuthorization";
-import OutCall "http-outcalls/outcall";
+import MixinObjectStorage "mo:caffeineai-object-storage/Mixin";
+import Storage "mo:caffeineai-object-storage/Storage";
+import AccessControl "mo:caffeineai-authorization/access-control";
+import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
+import OutCall "mo:caffeineai-http-outcalls/outcall";
+import Migration "migration";
 
 
 
+(with migration = Migration.run)
 actor {
-  include MixinStorage();
+  include MixinObjectStorage();
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -184,6 +186,7 @@ actor {
     email : Text;
     txnHash : Text;
     amountIcp : Text;
+    txnDate : Text;
     serviceType : PaymentServiceType;
     status : PaymentStatus;
     timestamp : Time.Time;
@@ -236,9 +239,6 @@ actor {
   } = #notConfigured;
   var domainLastVerificationAttempt : ?Time.Time = null;
 
-  // ============================================================
-  // STABLE STORAGE - persists all state across canister upgrades
-  // ============================================================
   stable var _stableAdminAssigned : Bool = false;
   stable var _stableUserRoles : [(Principal, AccessControl.UserRole)] = [];
   stable var _stableVideos : [(Text, VideoMeta)] = [];
@@ -252,7 +252,10 @@ actor {
   stable var _stableVideoViewRecords : [(Text, [VideoViewRecord])] = [];
   stable var _stableSectionVisits : [(Nat, SectionVisit)] = [];
   stable var _stableSectionVisitCounter : Nat = 0;
-  stable var _stablePaymentRecords : [(Text, PaymentRecord)] = [];
+  // Migration: _stablePaymentRecords keeps the OLD type shape (without txnDate) for upgrade compatibility.
+  // New records with txnDate are stored in _stablePaymentRecordsNew after migration is complete.
+  stable var _stablePaymentRecords : [(Text, { id : Text; name : Text; email : Text; txnHash : Text; amountIcp : Text; serviceType : PaymentServiceType; status : PaymentStatus; timestamp : Time.Time; notes : ?Text })] = [];
+  stable var _stablePaymentRecordsNew : [(Text, PaymentRecord)] = [];
   stable var _stablePaymentCounter : Nat = 0;
   stable var _stableBankTransferRecords : [(Text, BankTransferRecord)] = [];
   stable var _stableBankTransferCounter : Nat = 0;
@@ -272,7 +275,7 @@ actor {
     _stableVideoViewRecords := videoViewRecords.entries().toArray();
     _stableSectionVisits := sectionVisitStore.entries().toArray();
     _stableSectionVisitCounter := sectionVisitCounter;
-    _stablePaymentRecords := paymentRecords.entries().toArray();
+    _stablePaymentRecordsNew := paymentRecords.entries().toArray();
     _stablePaymentCounter := paymentCounter;
     _stableBankTransferRecords := bankTransferRecords.entries().toArray();
     _stableBankTransferCounter := bankTransferCounter;
@@ -309,7 +312,11 @@ actor {
       sectionVisitStore.add(k, v);
     };
     sectionVisitCounter := _stableSectionVisitCounter;
+    // Migrate old payment records (without txnDate) — default txnDate to ""
     for ((k, v) in _stablePaymentRecords.vals()) {
+      paymentRecords.add(k, { v with txnDate = "" });
+    };
+    for ((k, v) in _stablePaymentRecordsNew.vals()) {
       paymentRecords.add(k, v);
     };
     paymentCounter := _stablePaymentCounter;
@@ -327,6 +334,7 @@ actor {
     _stableVideoViewRecords := [];
     _stableSectionVisits := [];
     _stablePaymentRecords := [];
+    _stablePaymentRecordsNew := [];
     _stableBankTransferRecords := [];
   };
 
@@ -799,6 +807,7 @@ actor {
     email : Text,
     txnHash : Text,
     amountIcp : Text,
+    txnDate : Text,
     serviceType : PaymentServiceType,
   ) : async Text {
     paymentCounter += 1;
@@ -810,6 +819,7 @@ actor {
       email = email;
       txnHash = txnHash;
       amountIcp = amountIcp;
+      txnDate = txnDate;
       serviceType = serviceType;
       status = #pending;
       timestamp = Time.now();
@@ -845,6 +855,7 @@ actor {
           email = record.email;
           txnHash = record.txnHash;
           amountIcp = record.amountIcp;
+          txnDate = record.txnDate;
           serviceType = record.serviceType;
           status = newStatus;
           timestamp = record.timestamp;
