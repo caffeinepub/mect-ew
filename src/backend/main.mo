@@ -12,11 +12,11 @@ import Storage "mo:caffeineai-object-storage/Storage";
 import AccessControl "mo:caffeineai-authorization/access-control";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import OutCall "mo:caffeineai-http-outcalls/outcall";
-import Migration "migration";
 
 
 
-(with migration = Migration.run)
+
+
 actor {
   include MixinObjectStorage();
 
@@ -252,7 +252,7 @@ actor {
   stable var _stableVideoViewRecords : [(Text, [VideoViewRecord])] = [];
   stable var _stableSectionVisits : [(Nat, SectionVisit)] = [];
   stable var _stableSectionVisitCounter : Nat = 0;
-  // Migration: _stablePaymentRecords keeps the OLD type shape (without txnDate) for upgrade compatibility.
+  // _stablePaymentRecords keeps the OLD type shape (without txnDate) for upgrade compatibility with .old/ baseline.
   // New records with txnDate are stored in _stablePaymentRecordsNew after migration is complete.
   stable var _stablePaymentRecords : [(Text, { id : Text; name : Text; email : Text; txnHash : Text; amountIcp : Text; serviceType : PaymentServiceType; status : PaymentStatus; timestamp : Time.Time; notes : ?Text })] = [];
   stable var _stablePaymentRecordsNew : [(Text, PaymentRecord)] = [];

@@ -1,4 +1,4 @@
-// Version: 3.0.0
+// Version: 1.0.0
 type BankTransferRecord__640114656 =
   {
     amountUsd : Text;
@@ -35,20 +35,6 @@ type Nat__490723111 = Nat__920180692;
 type Nat__920180692 = Nat;
 type Node__46230540<K, V> =
   {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
-type OldPaymentRecord__674492288 =
-  {
-    amountIcp : Text;
-    email : Text;
-    id : Text;
-    name : Text;
-    notes : ?Text;
-    serviceType : OldPaymentServiceType__504322836;
-    status : OldPaymentStatus__257022736;
-    timestamp : Int;
-    txnHash : Text
-  };
-type OldPaymentServiceType__504322836 = {#consultoria; #mentoria};
-type OldPaymentStatus__257022736 = {#confirmed; #pending; #rejected};
 type PaymentRecord__216844392 =
   {
     amountIcp : Text;
@@ -116,85 +102,7 @@ type VideoMeta__511144384 =
   };
 type VideoViewRecord__477739674 =
   {country : CountryInfo__731560009; timestamp : Time__900049286};
-actor ({
-  stable var _stableAdminAssigned : Bool;
-  stable var _stableBankTransferCounter : Nat;
-  stable var _stableBankTransferRecords :
-    [(Text, BankTransferRecord__640114656)];
-  stable var _stableMessageCounter : Nat;
-  stable var _stableMessages : [(Text, StoredMessage__641135775)];
-  stable var _stablePaymentCounter : Nat;
-  in var _stablePaymentRecords : [(Text, OldPaymentRecord__674492288)];
-  stable var _stablePaymentRecordsNew : [(Text, PaymentRecord__216844392)];
-  stable var _stableSectionVisitCounter : Nat;
-  stable var _stableSectionVisits : [(Nat, SectionVisit__226669865)];
-  stable var _stableThumbnailCount : Nat;
-  stable var _stableThumbnails : [(Text, ThumbnailMeta__240784484)];
-  stable var _stableUserProfiles : [(Principal, UserProfile__491224006)];
-  stable var _stableUserRoles : [(Principal, UserRole__1054455867)];
-  stable var _stableVideoCounter : Nat;
-  stable var _stableVideoViewCounts : [(Text, Nat)];
-  stable var _stableVideoViewRecords : [(Text, [VideoViewRecord__477739674])];
-  stable var _stableVideos : [(Text, VideoMeta__511144384)];
-  stable accessControlState :
-    {
-      var adminAssigned : Bool;
-      userRoles : Map__605269027<Principal, UserRole__1054455867>
-    };
-  stable var bankTransferCounter : Nat;
-  stable bankTransferRecords :
-    {
-      var root : Node__46230540<Text, BankTransferRecord__640114656>;
-      var size : Nat__490723111
-    };
-  stable var customDomainStatus :
-    {#failed; #notConfigured; #pending; #verified};
-  stable var domainLastVerificationAttempt : ?Time__900049286;
-  stable var domainVerificationToken : ?Text;
-  stable var messageCounter : Nat;
-  stable messages :
-    {
-      var root : Node__46230540<Text, StoredMessage__641135775>;
-      var size : Nat__490723111
-    };
-  stable var paymentCounter : Nat;
-  in paymentRecords : Map__605269027<Text, OldPaymentRecord__674492288>;
-  stable pendingVideos :
-    {
-      var root : Node__46230540<Text, VideoMeta__511144384>;
-      var size : Nat__490723111
-    };
-  stable var sectionVisitCounter : Nat;
-  stable sectionVisitStore :
-    {
-      var root : Node__46230540<Nat, SectionVisit__226669865>;
-      var size : Nat__490723111
-    };
-  stable var thumbnailCount : Nat;
-  stable thumbnails :
-    {
-      var root : Node__46230540<Text, ThumbnailMeta__240784484>;
-      var size : Nat__490723111
-    };
-  stable userProfiles :
-    {
-      var root : Node__46230540<Principal, UserProfile__491224006>;
-      var size : Nat__490723111
-    };
-  stable var videoCounter : Nat;
-  stable videoViewCounts :
-    {var root : Node__46230540<Text, Nat>; var size : Nat__490723111};
-  stable videoViewRecords :
-    {
-      var root : Node__46230540<Text, [VideoViewRecord__477739674]>;
-      var size : Nat__490723111
-    };
-  stable videos :
-    {
-      var root : Node__46230540<Text, VideoMeta__511144384>;
-      var size : Nat__490723111
-    }
-}, {
+actor {
   stable var _stableAdminAssigned : Bool;
   stable var _stableBankTransferCounter : Nat;
   stable var _stableBankTransferRecords :
@@ -288,4 +196,4 @@ actor ({
       var root : Node__46230540<Text, VideoMeta__511144384>;
       var size : Nat__490723111
     }
-}) ;
+};
