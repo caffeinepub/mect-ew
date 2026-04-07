@@ -165,6 +165,20 @@ export const PaymentRecord = IDL.Record({
   'notes' : IDL.Opt(IDL.Text),
 });
 
+export const BankTransferRecord = IDL.Record({
+  'id' : IDL.Text,
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'amountUsd' : IDL.Text,
+  'bankName' : IDL.Text,
+  'transferDate' : IDL.Text,
+  'referenceNote' : IDL.Text,
+  'serviceType' : PaymentServiceType,
+  'status' : PaymentStatus,
+  'timestamp' : Time,
+  'notes' : IDL.Opt(IDL.Text),
+});
+
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
       [IDL.Vec(IDL.Nat8)],
@@ -688,6 +702,18 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+  'submitBankTransferRecord' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],
+      [IDL.Text],
+      [],
+    ),
+  'getBankTransferRecords' : IDL.Func([], [IDL.Vec(BankTransferRecord)], ['query']),
+  'updateBankTransferStatus' : IDL.Func(
+      [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
+      [],
+      [],
+    ),
+  'deleteBankTransferRecord' : IDL.Func([IDL.Text], [], []),
     'uploadVideo' : IDL.Func(
         [IDL.Text, ExternalBlob, IDL.Nat, VideoCategory],
         [IDL.Text],

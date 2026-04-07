@@ -5,7 +5,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { PaymentServiceType } from "../backend";
-import IcpPaymentWidget from "../components/IcpPaymentWidget";
+import PaymentWidget from "../components/PaymentWidget";
 import { useSectionTracker } from "../hooks/useSectionTracker";
 
 const bloques = [
@@ -158,7 +158,7 @@ export default function MentoringPage() {
               </div>
             </div>
 
-            <IcpPaymentWidget serviceType={PaymentServiceType.mentoria} />
+            <PaymentWidget serviceType={PaymentServiceType.mentoria} />
           </div>
         </div>
       </section>

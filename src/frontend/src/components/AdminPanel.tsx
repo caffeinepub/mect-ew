@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import BankTransfersPanel from "./BankTransfersPanel";
 import DomainManagement from "./DomainManagement";
 import MessageManagement from "./MessageManagement";
 import PaymentsPanel from "./PaymentsPanel";
@@ -15,12 +16,18 @@ export default function AdminPanel() {
       </div>
 
       <Tabs defaultValue="messages" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="messages" data-ocid="admin.messages.tab">
             Mensajes
           </TabsTrigger>
           <TabsTrigger value="payments" data-ocid="admin.payments.tab">
             Pagos ICP
+          </TabsTrigger>
+          <TabsTrigger
+            value="bank-transfers"
+            data-ocid="admin.bank_transfers.tab"
+          >
+            Transferencias
           </TabsTrigger>
           <TabsTrigger value="analytics" data-ocid="admin.analytics.tab">
             Analíticas
@@ -34,6 +41,9 @@ export default function AdminPanel() {
         </TabsContent>
         <TabsContent value="payments" className="mt-6">
           <PaymentsPanel />
+        </TabsContent>
+        <TabsContent value="bank-transfers" className="mt-6">
+          <BankTransfersPanel />
         </TabsContent>
         <TabsContent value="analytics" className="mt-6">
           <SectionAnalyticsPanel />

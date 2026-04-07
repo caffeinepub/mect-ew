@@ -113,6 +113,19 @@ export interface PaymentRecord {
     timestamp: Time;
     notes?: string;
 }
+export interface BankTransferRecord {
+    id: string;
+    name: string;
+    email: string;
+    amountUsd: string;
+    bankName: string;
+    transferDate: string;
+    referenceNote: string;
+    serviceType: PaymentServiceType;
+    status: PaymentStatus;
+    timestamp: Time;
+    notes?: string;
+}
 export enum FormType {
     contacto = "contacto",
     consultoria = "consultoria",
@@ -224,6 +237,10 @@ export interface backendInterface {
     streamVideo(videoId: string, country: CountryInfo | null): Promise<ExternalBlob | null>;
     submitContactForm(form: ContactForm, formType: FormType): Promise<string>;
     submitPaymentRecord(name: string, email: string, txnHash: string, amountIcp: string, serviceType: PaymentServiceType): Promise<string>;
+    submitBankTransferRecord(name: string, email: string, amountUsd: string, bankName: string, transferDate: string, referenceNote: string, serviceType: PaymentServiceType): Promise<string>;
+    getBankTransferRecords(): Promise<Array<BankTransferRecord>>;
+    updateBankTransferStatus(transferId: string, newStatus: PaymentStatus, notes: string | null): Promise<void>;
+    deleteBankTransferRecord(transferId: string): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updatePaymentStatus(paymentId: string, newStatus: PaymentStatus, notes: string | null): Promise<void>;
     updateVideoTitle(videoId: string, newTitle: string): Promise<void>;

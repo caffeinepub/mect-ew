@@ -1,5 +1,5 @@
-import { FormType, PaymentServiceType } from "../backend";
-import IcpPaymentWidget from "../components/IcpPaymentWidget";
+import { PaymentServiceType } from "../backend";
+import PaymentWidget from "../components/PaymentWidget";
 import { useSectionTracker } from "../hooks/useSectionTracker";
 
 export default function ConsultancyPage() {
@@ -71,7 +71,7 @@ export default function ConsultancyPage() {
               </div>
             </div>
 
-            <IcpPaymentWidget serviceType={PaymentServiceType.consultoria} />
+            <PaymentWidget serviceType={PaymentServiceType.consultoria} />
           </div>
         </div>
       </section>
