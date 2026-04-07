@@ -163,6 +163,7 @@ export interface _SERVICE {
   'bulkDeleteVideos' : ActorMethod<[Array<string>], undefined>,
   'bulkMoveVideosToCategory' : ActorMethod<[Array<string>, string], undefined>,
   'bulkRecordViews' : ActorMethod<[Array<[string, CountryInfo]>], undefined>,
+  'deleteAllSectionVisitRecords' : ActorMethod<[], undefined>,
   'deleteCustomThumbnail' : ActorMethod<[string, string], undefined>,
   'deleteMessage' : ActorMethod<[string], undefined>,
   'deletePaymentRecord' : ActorMethod<[string], undefined>,

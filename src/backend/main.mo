@@ -686,6 +686,17 @@ actor {
     sectionVisitStore.remove(visitId);
   };
 
+  public shared ({ caller }) func deleteAllSectionVisitRecords() : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Acceso no autorizado: Solo administradores pueden eliminar todas las visitas");
+    };
+    let keys = sectionVisitStore.keys().toArray();
+    for (key in keys.vals()) {
+      sectionVisitStore.remove(key);
+    };
+    sectionVisitCounter := 0;
+  };
+
   // ICP Payment functions
   public shared ({ caller }) func submitPaymentRecord(
     name : Text,

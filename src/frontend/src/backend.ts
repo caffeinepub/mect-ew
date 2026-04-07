@@ -267,6 +267,7 @@ export interface backendInterface {
     bulkDeleteVideos(videoIds: Array<string>): Promise<void>;
     bulkMoveVideosToCategory(videoIds: Array<string>, newCategoryText: string): Promise<void>;
     bulkRecordViews(viewEntries: Array<[string, CountryInfo]>): Promise<void>;
+    deleteAllSectionVisitRecords(): Promise<void>;
     deleteCustomThumbnail(videoId: string, thumbnailId: string): Promise<void>;
     deleteMessage(messageId: string): Promise<void>;
     deletePaymentRecord(paymentId: string): Promise<void>;
@@ -482,6 +483,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.bulkRecordViews(arg0);
+            return result;
+        }
+    }
+    async deleteAllSectionVisitRecords(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteAllSectionVisitRecords();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteAllSectionVisitRecords();
             return result;
         }
     }

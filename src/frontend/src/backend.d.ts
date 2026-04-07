@@ -174,6 +174,7 @@ export interface backendInterface {
     bulkDeleteVideos(videoIds: Array<string>): Promise<void>;
     bulkMoveVideosToCategory(videoIds: Array<string>, newCategoryText: string): Promise<void>;
     bulkRecordViews(viewEntries: Array<[string, CountryInfo]>): Promise<void>;
+    deleteAllSectionVisitRecords(): Promise<void>;
     deleteCustomThumbnail(videoId: string, thumbnailId: string): Promise<void>;
     deleteMessage(messageId: string): Promise<void>;
     deletePaymentRecord(paymentId: string): Promise<void>;
