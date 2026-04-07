@@ -120,10 +120,10 @@ function IcpForm({ serviceType }: { serviceType: PaymentServiceType }) {
         <div className="text-sm text-muted-foreground space-y-1">
           <p className="font-semibold text-foreground">Pasos:</p>
           <ol className="list-decimal list-inside space-y-1 text-sm">
-            <li>Coordiná el monto y servicio por privado.</li>
-            <li>Realizá la transferencia ICP al Account ID indicado.</li>
+            <li>Coordine servicio y honorarios por privado.</li>
+            <li>Realice la transferencia ICP al Account ID indicado.</li>
             <li>
-              Completá el formulario de abajo con el hash de tu transacción.
+              Completé el formulario de abajo con el hash de su transferencia.
             </li>
           </ol>
         </div>
@@ -286,7 +286,7 @@ function BankTransferForm({
     setError("");
     setSubmitting(true);
     try {
-      await (actor as any).submitBankTransferRecord(
+      await actor.submitBankTransferRecord(
         form.name,
         form.email,
         form.amountUsd,
