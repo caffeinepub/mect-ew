@@ -63,9 +63,11 @@ export default function PaymentWidget({ serviceType }: Props) {
     setSubmitting(true);
     try {
       // Create an anonymous actor on-demand — no Internet Identity required.
-      // createActorWithConfig without agentOptions uses the anonymous identity,
-      // which works for public shared functions like submitPaymentRecord.
-      const actor = await createActorWithConfig(createActor);
+      // Explicitly pass agentOptions with the current origin as host so the
+      // HttpAgent resolves the canister correctly for anonymous callers.
+      const actor = await createActorWithConfig(createActor, {
+        agentOptions: { host: window.location.origin },
+      });
       await actor.submitPaymentRecord(
         form.name,
         form.email,
@@ -75,7 +77,8 @@ export default function PaymentWidget({ serviceType }: Props) {
         serviceType,
       );
       setSubmitted(true);
-    } catch {
+    } catch (err) {
+      console.error("[PaymentWidget] submitPaymentRecord failed:", err);
       setError("Error al registrar el pago. Intentá de nuevo.");
     } finally {
       setSubmitting(false);
