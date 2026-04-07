@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createActorWithConfig } from "@caffeineai/core-infrastructure";
+import { loadConfig } from "@caffeineai/core-infrastructure";
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
-import type { PaymentServiceType } from "../backend";
 import { createActor } from "../backend";
+import type { PaymentServiceType } from "../backend";
 
 const ICP_ACCOUNT_ID =
   "f96703871a6cfcdfc4e920014a5e21d1f27e3b067817469bd0948b9d86a48e48";
@@ -12,6 +12,12 @@ const ICP_ACCOUNT_ID =
 interface Props {
   serviceType: PaymentServiceType;
 }
+
+// No-op file handlers — submitPaymentRecord only uses plain text params, no file blobs.
+const noopUpload = async (): Promise<Uint8Array> => new Uint8Array();
+const noopDownload = async (): Promise<never> => {
+  throw new Error("download not used");
+};
 
 function SuccessState() {
   return (
@@ -62,12 +68,16 @@ export default function PaymentWidget({ serviceType }: Props) {
     setError("");
     setSubmitting(true);
     try {
-      // Create an anonymous actor on-demand — no Internet Identity required.
-      // Explicitly pass agentOptions with the current origin as host so the
-      // HttpAgent resolves the canister correctly for anonymous callers.
-      const actor = await createActorWithConfig(createActor, {
+      // Load config to get the real canister ID at runtime (injected by Caffeine into env.json).
+      const config = await loadConfig();
+      const canisterId = config.backend_canister_id;
+
+      // Create an anonymous actor directly — bypasses createActorWithConfig's HttpAgent
+      // override so that window.location.origin is used as host (IC service worker routing).
+      const actor = createActor(canisterId, noopUpload, noopDownload, {
         agentOptions: { host: window.location.origin },
       });
+
       await actor.submitPaymentRecord(
         form.name,
         form.email,
@@ -79,7 +89,8 @@ export default function PaymentWidget({ serviceType }: Props) {
       setSubmitted(true);
     } catch (err) {
       console.error("[PaymentWidget] submitPaymentRecord failed:", err);
-      setError("Error al registrar el pago. Intentá de nuevo.");
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Error al registrar el pago: ${msg}`);
     } finally {
       setSubmitting(false);
     }
