@@ -12,11 +12,11 @@ import Storage "mo:caffeineai-object-storage/Storage";
 import AccessControl "mo:caffeineai-authorization/access-control";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import OutCall "mo:caffeineai-http-outcalls/outcall";
+import Migration "migration";
 
 
 
-
-
+(with migration = Migration.run)
 actor {
   include MixinObjectStorage();
 
@@ -193,21 +193,6 @@ actor {
     notes : ?Text;
   };
 
-  // Bank Transfer types
-  public type BankTransferRecord = {
-    id : Text;
-    name : Text;
-    email : Text;
-    amountUsd : Text;
-    bankName : Text;
-    transferDate : Text;
-    referenceNote : Text;
-    serviceType : PaymentServiceType;
-    status : PaymentStatus;
-    timestamp : Time.Time;
-    notes : ?Text;
-  };
-
   let videos = Map.empty<Text, VideoMeta>();
   let pendingVideos = Map.empty<Text, VideoMeta>();
   let messages = Map.empty<Text, StoredMessage>();
@@ -227,9 +212,6 @@ actor {
   let paymentRecords = Map.empty<Text, PaymentRecord>();
   var paymentCounter : Nat = 0;
 
-  let bankTransferRecords = Map.empty<Text, BankTransferRecord>();
-  var bankTransferCounter : Nat = 0;
-
   var domainVerificationToken : ?Text = ?"INITIAL_VERIFICATION_TOKEN";
   var customDomainStatus : {
     #pending;
@@ -239,104 +221,7 @@ actor {
   } = #notConfigured;
   var domainLastVerificationAttempt : ?Time.Time = null;
 
-  stable var _stableAdminAssigned : Bool = false;
-  stable var _stableUserRoles : [(Principal, AccessControl.UserRole)] = [];
-  stable var _stableVideos : [(Text, VideoMeta)] = [];
-  stable var _stableMessages : [(Text, StoredMessage)] = [];
-  stable var _stableThumbnails : [(Text, ThumbnailMeta)] = [];
-  stable var _stableUserProfiles : [(Principal, UserProfile)] = [];
-  stable var _stableMessageCounter : Nat = 0;
-  stable var _stableVideoCounter : Nat = 0;
-  stable var _stableThumbnailCount : Nat = 0;
-  stable var _stableVideoViewCounts : [(Text, Nat)] = [];
-  stable var _stableVideoViewRecords : [(Text, [VideoViewRecord])] = [];
-  stable var _stableSectionVisits : [(Nat, SectionVisit)] = [];
-  stable var _stableSectionVisitCounter : Nat = 0;
-  // _stablePaymentRecords keeps the OLD type shape (without txnDate) for upgrade compatibility with .old/ baseline.
-  // New records with txnDate are stored in _stablePaymentRecordsNew after migration is complete.
-  stable var _stablePaymentRecords : [(Text, { id : Text; name : Text; email : Text; txnHash : Text; amountIcp : Text; serviceType : PaymentServiceType; status : PaymentStatus; timestamp : Time.Time; notes : ?Text })] = [];
-  stable var _stablePaymentRecordsNew : [(Text, PaymentRecord)] = [];
-  stable var _stablePaymentCounter : Nat = 0;
-  stable var _stableBankTransferRecords : [(Text, BankTransferRecord)] = [];
-  stable var _stableBankTransferCounter : Nat = 0;
 
-  // Save all state before each upgrade
-  system func preupgrade() {
-    _stableAdminAssigned := accessControlState.adminAssigned;
-    _stableUserRoles := accessControlState.userRoles.entries().toArray();
-    _stableVideos := videos.entries().toArray();
-    _stableMessages := messages.entries().toArray();
-    _stableThumbnails := thumbnails.entries().toArray();
-    _stableUserProfiles := userProfiles.entries().toArray();
-    _stableMessageCounter := messageCounter;
-    _stableVideoCounter := videoCounter;
-    _stableThumbnailCount := thumbnailCount;
-    _stableVideoViewCounts := videoViewCounts.entries().toArray();
-    _stableVideoViewRecords := videoViewRecords.entries().toArray();
-    _stableSectionVisits := sectionVisitStore.entries().toArray();
-    _stableSectionVisitCounter := sectionVisitCounter;
-    _stablePaymentRecordsNew := paymentRecords.entries().toArray();
-    _stablePaymentCounter := paymentCounter;
-    _stableBankTransferRecords := bankTransferRecords.entries().toArray();
-    _stableBankTransferCounter := bankTransferCounter;
-  };
-
-  // Restore all state after each upgrade
-  system func postupgrade() {
-    accessControlState.adminAssigned := _stableAdminAssigned;
-    for ((p, r) in _stableUserRoles.vals()) {
-      accessControlState.userRoles.add(p, r);
-    };
-    for ((k, v) in _stableVideos.vals()) {
-      videos.add(k, v);
-    };
-    for ((k, v) in _stableMessages.vals()) {
-      messages.add(k, v);
-    };
-    for ((k, v) in _stableThumbnails.vals()) {
-      thumbnails.add(k, v);
-    };
-    for ((k, v) in _stableUserProfiles.vals()) {
-      userProfiles.add(k, v);
-    };
-    messageCounter := _stableMessageCounter;
-    videoCounter := _stableVideoCounter;
-    thumbnailCount := _stableThumbnailCount;
-    for ((k, v) in _stableVideoViewCounts.vals()) {
-      videoViewCounts.add(k, v);
-    };
-    for ((k, v) in _stableVideoViewRecords.vals()) {
-      videoViewRecords.add(k, v);
-    };
-    for ((k, v) in _stableSectionVisits.vals()) {
-      sectionVisitStore.add(k, v);
-    };
-    sectionVisitCounter := _stableSectionVisitCounter;
-    // Migrate old payment records (without txnDate) — default txnDate to ""
-    for ((k, v) in _stablePaymentRecords.vals()) {
-      paymentRecords.add(k, { v with txnDate = "" });
-    };
-    for ((k, v) in _stablePaymentRecordsNew.vals()) {
-      paymentRecords.add(k, v);
-    };
-    paymentCounter := _stablePaymentCounter;
-    for ((k, v) in _stableBankTransferRecords.vals()) {
-      bankTransferRecords.add(k, v);
-    };
-    bankTransferCounter := _stableBankTransferCounter;
-    // Clear temporary stable storage after restore to free memory
-    _stableUserRoles := [];
-    _stableVideos := [];
-    _stableMessages := [];
-    _stableThumbnails := [];
-    _stableUserProfiles := [];
-    _stableVideoViewCounts := [];
-    _stableVideoViewRecords := [];
-    _stableSectionVisits := [];
-    _stablePaymentRecords := [];
-    _stablePaymentRecordsNew := [];
-    _stableBankTransferRecords := [];
-  };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -872,83 +757,6 @@ actor {
       Runtime.trap("Acceso no autorizado: Solo administradores pueden eliminar pagos");
     };
     paymentRecords.remove(paymentId);
-  };
-
-  // ============================================================
-  // BANK TRANSFER FUNCTIONS
-  // ============================================================
-
-  public shared ({ caller }) func submitBankTransferRecord(
-    name : Text,
-    email : Text,
-    amountUsd : Text,
-    bankName : Text,
-    transferDate : Text,
-    referenceNote : Text,
-    serviceType : PaymentServiceType,
-  ) : async Text {
-    bankTransferCounter += 1;
-    let id = "banktransfer_" # bankTransferCounter.toText();
-    let record : BankTransferRecord = {
-      id = id;
-      name = name;
-      email = email;
-      amountUsd = amountUsd;
-      bankName = bankName;
-      transferDate = transferDate;
-      referenceNote = referenceNote;
-      serviceType = serviceType;
-      status = #pending;
-      timestamp = Time.now();
-      notes = null;
-    };
-    bankTransferRecords.add(id, record);
-    id;
-  };
-
-  public query ({ caller }) func getBankTransferRecords() : async [BankTransferRecord] {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Acceso no autorizado: Solo administradores pueden ver transferencias");
-    };
-    bankTransferRecords.values().toArray();
-  };
-
-  public shared ({ caller }) func updateBankTransferStatus(
-    transferId : Text,
-    newStatus : PaymentStatus,
-    adminNotes : ?Text,
-  ) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Acceso no autorizado: Solo administradores pueden actualizar transferencias");
-    };
-    switch (bankTransferRecords.get(transferId)) {
-      case (null) {
-        Runtime.trap("Transferencia no encontrada: " # transferId);
-      };
-      case (?record) {
-        let updated : BankTransferRecord = {
-          id = record.id;
-          name = record.name;
-          email = record.email;
-          amountUsd = record.amountUsd;
-          bankName = record.bankName;
-          transferDate = record.transferDate;
-          referenceNote = record.referenceNote;
-          serviceType = record.serviceType;
-          status = newStatus;
-          timestamp = record.timestamp;
-          notes = adminNotes;
-        };
-        bankTransferRecords.add(transferId, updated);
-      };
-    };
-  };
-
-  public shared ({ caller }) func deleteBankTransferRecord(transferId : Text) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Acceso no autorizado: Solo administradores pueden eliminar transferencias");
-    };
-    bankTransferRecords.remove(transferId);
   };
 
   public shared ({ caller }) func streamVideo(videoId : Text, country : ?CountryInfo) : async ?Storage.ExternalBlob {

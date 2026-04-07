@@ -72,19 +72,6 @@ export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
 }
-export interface BankTransferRecord {
-    id: string;
-    status: PaymentStatus;
-    serviceType: PaymentServiceType;
-    transferDate: string;
-    name: string;
-    email: string;
-    bankName: string;
-    referenceNote: string;
-    notes?: string;
-    timestamp: Time;
-    amountUsd: string;
-}
 export type CountryCode = string;
 export interface ThumbnailMeta {
     id: string;
@@ -187,7 +174,6 @@ export interface backendInterface {
     bulkDeleteVideos(videoIds: Array<string>): Promise<void>;
     bulkMoveVideosToCategory(videoIds: Array<string>, newCategoryText: string): Promise<void>;
     bulkRecordViews(viewEntries: Array<[string, CountryInfo]>): Promise<void>;
-    deleteBankTransferRecord(transferId: string): Promise<void>;
     deleteCustomThumbnail(videoId: string, thumbnailId: string): Promise<void>;
     deleteMessage(messageId: string): Promise<void>;
     deletePaymentRecord(paymentId: string): Promise<void>;
@@ -200,7 +186,6 @@ export interface backendInterface {
     getAdminVideos(): Promise<Array<VideoMeta>>;
     getAdminVideosByCategory(category: VideoCategory): Promise<Array<VideoMeta>>;
     getAllVideos(): Promise<Array<PublicVideoMeta>>;
-    getBankTransferRecords(): Promise<Array<BankTransferRecord>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCustomDomainStatus(): Promise<{
@@ -233,11 +218,9 @@ export interface backendInterface {
     startRecording(): Promise<void>;
     stopRecording(): Promise<void>;
     streamVideo(videoId: string, country: CountryInfo | null): Promise<ExternalBlob | null>;
-    submitBankTransferRecord(name: string, email: string, amountUsd: string, bankName: string, transferDate: string, referenceNote: string, serviceType: PaymentServiceType): Promise<string>;
     submitContactForm(form: ContactForm, formType: FormType): Promise<string>;
     submitPaymentRecord(name: string, email: string, txnHash: string, amountIcp: string, txnDate: string, serviceType: PaymentServiceType): Promise<string>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
-    updateBankTransferStatus(transferId: string, newStatus: PaymentStatus, adminNotes: string | null): Promise<void>;
     updatePaymentStatus(paymentId: string, newStatus: PaymentStatus, notes: string | null): Promise<void>;
     updateVideoTitle(videoId: string, newTitle: string): Promise<void>;
     uploadCustomThumbnail(videoId: string, thumbnailBlob: ExternalBlob, imageFormat: ImageFormat, dimensions: {

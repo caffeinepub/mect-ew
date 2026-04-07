@@ -187,20 +187,6 @@ type ContactForm =
    message: text;
    name: text;
  };
-type BankTransferRecord = 
- record {
-   amountUsd: text;
-   bankName: text;
-   email: text;
-   id: text;
-   name: text;
-   notes: opt text;
-   referenceNote: text;
-   serviceType: PaymentServiceType;
-   status: PaymentStatus;
-   timestamp: Time;
-   transferDate: text;
- };
 service : {
   _immutableObjectStorageBlobsAreLive: (hashes: vec blob) -> (vec bool) query;
   _immutableObjectStorageBlobsToDelete: () -> (vec blob) query;
@@ -219,7 +205,6 @@ service : {
                                        text;
                                        CountryInfo;
                                      }) -> ();
-  deleteBankTransferRecord: (transferId: text) -> ();
   deleteCustomThumbnail: (videoId: text, thumbnailId: text) -> ();
   deleteMessage: (messageId: text) -> ();
   deletePaymentRecord: (paymentId: text) -> ();
@@ -233,7 +218,6 @@ service : {
   getAdminVideosByCategory: (category: VideoCategory) ->
    (vec VideoMeta) query;
   getAllVideos: () -> (vec PublicVideoMeta) query;
-  getBankTransferRecords: () -> (vec BankTransferRecord) query;
   getCallerUserProfile: () -> (opt UserProfile) query;
   getCallerUserRole: () -> (UserRole) query;
   getCustomDomainStatus: () ->
@@ -278,15 +262,10 @@ service : {
   stopRecording: () -> ();
   streamVideo: (videoId: text, country: opt CountryInfo) ->
    (opt ExternalBlob);
-  submitBankTransferRecord: (name: text, email: text, amountUsd: text,
-   bankName: text, transferDate: text, referenceNote: text, serviceType:
-   PaymentServiceType) -> (text);
   submitContactForm: (form: ContactForm, formType: FormType) -> (text);
   submitPaymentRecord: (name: text, email: text, txnHash: text, amountIcp:
    text, txnDate: text, serviceType: PaymentServiceType) -> (text);
   transform: (input: TransformationInput) -> (TransformationOutput) query;
-  updateBankTransferStatus: (transferId: text, newStatus: PaymentStatus,
-   adminNotes: opt text) -> ();
   updatePaymentStatus: (paymentId: text, newStatus: PaymentStatus, notes:
    opt text) -> ();
   updateVideoTitle: (videoId: text, newTitle: text) -> ();

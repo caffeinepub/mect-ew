@@ -10,19 +10,6 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export interface BankTransferRecord {
-  'id' : string,
-  'status' : PaymentStatus,
-  'serviceType' : PaymentServiceType,
-  'transferDate' : string,
-  'name' : string,
-  'email' : string,
-  'bankName' : string,
-  'referenceNote' : string,
-  'notes' : [] | [string],
-  'timestamp' : Time,
-  'amountUsd' : string,
-}
 export interface ContactForm {
   'name' : string,
   'email' : string,
@@ -176,7 +163,6 @@ export interface _SERVICE {
   'bulkDeleteVideos' : ActorMethod<[Array<string>], undefined>,
   'bulkMoveVideosToCategory' : ActorMethod<[Array<string>, string], undefined>,
   'bulkRecordViews' : ActorMethod<[Array<[string, CountryInfo]>], undefined>,
-  'deleteBankTransferRecord' : ActorMethod<[string], undefined>,
   'deleteCustomThumbnail' : ActorMethod<[string, string], undefined>,
   'deleteMessage' : ActorMethod<[string], undefined>,
   'deletePaymentRecord' : ActorMethod<[string], undefined>,
@@ -189,7 +175,6 @@ export interface _SERVICE {
   'getAdminVideos' : ActorMethod<[], Array<VideoMeta>>,
   'getAdminVideosByCategory' : ActorMethod<[VideoCategory], Array<VideoMeta>>,
   'getAllVideos' : ActorMethod<[], Array<PublicVideoMeta>>,
-  'getBankTransferRecords' : ActorMethod<[], Array<BankTransferRecord>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCustomDomainStatus' : ActorMethod<
@@ -231,20 +216,12 @@ export interface _SERVICE {
     [string, [] | [CountryInfo]],
     [] | [ExternalBlob]
   >,
-  'submitBankTransferRecord' : ActorMethod<
-    [string, string, string, string, string, string, PaymentServiceType],
-    string
-  >,
   'submitContactForm' : ActorMethod<[ContactForm, FormType], string>,
   'submitPaymentRecord' : ActorMethod<
     [string, string, string, string, string, PaymentServiceType],
     string
   >,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
-  'updateBankTransferStatus' : ActorMethod<
-    [string, PaymentStatus, [] | [string]],
-    undefined
-  >,
   'updatePaymentStatus' : ActorMethod<
     [string, PaymentStatus, [] | [string]],
     undefined

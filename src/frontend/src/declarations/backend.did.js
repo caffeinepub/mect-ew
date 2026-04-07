@@ -60,28 +60,6 @@ export const PublicVideoMeta = IDL.Record({
   'timestamp' : Time,
   'category' : VideoCategory,
 });
-export const PaymentStatus = IDL.Variant({
-  'pending' : IDL.Null,
-  'rejected' : IDL.Null,
-  'confirmed' : IDL.Null,
-});
-export const PaymentServiceType = IDL.Variant({
-  'consultoria' : IDL.Null,
-  'mentoria' : IDL.Null,
-});
-export const BankTransferRecord = IDL.Record({
-  'id' : IDL.Text,
-  'status' : PaymentStatus,
-  'serviceType' : PaymentServiceType,
-  'transferDate' : IDL.Text,
-  'name' : IDL.Text,
-  'email' : IDL.Text,
-  'bankName' : IDL.Text,
-  'referenceNote' : IDL.Text,
-  'notes' : IDL.Opt(IDL.Text),
-  'timestamp' : Time,
-  'amountUsd' : IDL.Text,
-});
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 export const FormType = IDL.Variant({
   'contacto' : IDL.Null,
@@ -101,6 +79,15 @@ export const StoredMessage = IDL.Record({
   'email' : IDL.Text,
   'timestamp' : Time,
   'reply' : IDL.Opt(IDL.Text),
+});
+export const PaymentStatus = IDL.Variant({
+  'pending' : IDL.Null,
+  'rejected' : IDL.Null,
+  'confirmed' : IDL.Null,
+});
+export const PaymentServiceType = IDL.Variant({
+  'consultoria' : IDL.Null,
+  'mentoria' : IDL.Null,
 });
 export const PaymentRecord = IDL.Record({
   'id' : IDL.Text,
@@ -214,7 +201,6 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
-  'deleteBankTransferRecord' : IDL.Func([IDL.Text], [], []),
   'deleteCustomThumbnail' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'deleteMessage' : IDL.Func([IDL.Text], [], []),
   'deletePaymentRecord' : IDL.Func([IDL.Text], [], []),
@@ -239,11 +225,6 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getAllVideos' : IDL.Func([], [IDL.Vec(PublicVideoMeta)], ['query']),
-  'getBankTransferRecords' : IDL.Func(
-      [],
-      [IDL.Vec(BankTransferRecord)],
-      ['query'],
-    ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCustomDomainStatus' : IDL.Func(
@@ -319,19 +300,6 @@ export const idlService = IDL.Service({
       [IDL.Opt(ExternalBlob)],
       [],
     ),
-  'submitBankTransferRecord' : IDL.Func(
-      [
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        PaymentServiceType,
-      ],
-      [IDL.Text],
-      [],
-    ),
   'submitContactForm' : IDL.Func([ContactForm, FormType], [IDL.Text], []),
   'submitPaymentRecord' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],
@@ -342,11 +310,6 @@ export const idlService = IDL.Service({
       [TransformationInput],
       [TransformationOutput],
       ['query'],
-    ),
-  'updateBankTransferStatus' : IDL.Func(
-      [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
-      [],
-      [],
     ),
   'updatePaymentStatus' : IDL.Func(
       [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
@@ -462,28 +425,6 @@ export const idlFactory = ({ IDL }) => {
     'timestamp' : Time,
     'category' : VideoCategory,
   });
-  const PaymentStatus = IDL.Variant({
-    'pending' : IDL.Null,
-    'rejected' : IDL.Null,
-    'confirmed' : IDL.Null,
-  });
-  const PaymentServiceType = IDL.Variant({
-    'consultoria' : IDL.Null,
-    'mentoria' : IDL.Null,
-  });
-  const BankTransferRecord = IDL.Record({
-    'id' : IDL.Text,
-    'status' : PaymentStatus,
-    'serviceType' : PaymentServiceType,
-    'transferDate' : IDL.Text,
-    'name' : IDL.Text,
-    'email' : IDL.Text,
-    'bankName' : IDL.Text,
-    'referenceNote' : IDL.Text,
-    'notes' : IDL.Opt(IDL.Text),
-    'timestamp' : Time,
-    'amountUsd' : IDL.Text,
-  });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
   const FormType = IDL.Variant({
     'contacto' : IDL.Null,
@@ -503,6 +444,15 @@ export const idlFactory = ({ IDL }) => {
     'email' : IDL.Text,
     'timestamp' : Time,
     'reply' : IDL.Opt(IDL.Text),
+  });
+  const PaymentStatus = IDL.Variant({
+    'pending' : IDL.Null,
+    'rejected' : IDL.Null,
+    'confirmed' : IDL.Null,
+  });
+  const PaymentServiceType = IDL.Variant({
+    'consultoria' : IDL.Null,
+    'mentoria' : IDL.Null,
   });
   const PaymentRecord = IDL.Record({
     'id' : IDL.Text,
@@ -617,7 +567,6 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
-    'deleteBankTransferRecord' : IDL.Func([IDL.Text], [], []),
     'deleteCustomThumbnail' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'deleteMessage' : IDL.Func([IDL.Text], [], []),
     'deletePaymentRecord' : IDL.Func([IDL.Text], [], []),
@@ -642,11 +591,6 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getAllVideos' : IDL.Func([], [IDL.Vec(PublicVideoMeta)], ['query']),
-    'getBankTransferRecords' : IDL.Func(
-        [],
-        [IDL.Vec(BankTransferRecord)],
-        ['query'],
-      ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCustomDomainStatus' : IDL.Func(
@@ -726,19 +670,6 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(ExternalBlob)],
         [],
       ),
-    'submitBankTransferRecord' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          PaymentServiceType,
-        ],
-        [IDL.Text],
-        [],
-      ),
     'submitContactForm' : IDL.Func([ContactForm, FormType], [IDL.Text], []),
     'submitPaymentRecord' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, PaymentServiceType],
@@ -749,11 +680,6 @@ export const idlFactory = ({ IDL }) => {
         [TransformationInput],
         [TransformationOutput],
         ['query'],
-      ),
-    'updateBankTransferStatus' : IDL.Func(
-        [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
-        [],
-        [],
       ),
     'updatePaymentStatus' : IDL.Func(
         [IDL.Text, PaymentStatus, IDL.Opt(IDL.Text)],
