@@ -11,13 +11,12 @@ import { useNavigate } from "@tanstack/react-router";
 import { Mail, Menu, Share2, Shield, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoSrc from "../../public/assets/Logo-4.png";
-// Import og-logo-preview to ensure it is included in the build bundle
-import ogPreviewSrc from "../../public/assets/generated/og-logo-mectew.dim_1200x630.png";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useIsCallerAdmin } from "../hooks/useQueries";
 
-// Export so other modules can reference the og:image path
-export const OG_IMAGE_URL = `https://mectelliottwave.com${ogPreviewSrc}`;
+// Logo-4.png is in public/assets/ so it is served at a fixed, predictable path
+// without any build-time hashing — safe to use as og:image
+export const OG_IMAGE_URL = "https://mectelliottwave.com/assets/Logo-4.png";
 
 const SITE_URL = "https://mectelliottwave.com";
 const SITE_TITLE =
