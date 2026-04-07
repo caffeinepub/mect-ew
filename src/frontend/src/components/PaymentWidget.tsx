@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createActorWithConfig } from "@caffeineai/core-infrastructure";
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 import type { PaymentServiceType } from "../backend";
-import { useActor } from "../hooks/useActor";
+import { createActor } from "../backend";
 
 const ICP_ACCOUNT_ID =
   "f96703871a6cfcdfc4e920014a5e21d1f27e3b067817469bd0948b9d86a48e48";
@@ -28,7 +29,6 @@ function SuccessState() {
 }
 
 export default function PaymentWidget({ serviceType }: Props) {
-  const { actor } = useActor();
   const [copied, setCopied] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -59,13 +59,13 @@ export default function PaymentWidget({ serviceType }: Props) {
       setError("Por favor completá todos los campos.");
       return;
     }
-    if (!actor) {
-      setError("Error de conexión. Intentá de nuevo.");
-      return;
-    }
     setError("");
     setSubmitting(true);
     try {
+      // Create an anonymous actor on-demand — no Internet Identity required.
+      // createActorWithConfig without agentOptions uses the anonymous identity,
+      // which works for public shared functions like submitPaymentRecord.
+      const actor = await createActorWithConfig(createActor);
       await actor.submitPaymentRecord(
         form.name,
         form.email,
@@ -133,7 +133,6 @@ export default function PaymentWidget({ serviceType }: Props) {
           <SuccessState />
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <p className="text-sm font-semibold">Confirmar pago realizado</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label

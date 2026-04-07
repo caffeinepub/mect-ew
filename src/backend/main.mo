@@ -12,11 +12,11 @@ import Storage "mo:caffeineai-object-storage/Storage";
 import AccessControl "mo:caffeineai-authorization/access-control";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import OutCall "mo:caffeineai-http-outcalls/outcall";
-import Migration "migration";
 
 
 
-(with migration = Migration.run)
+
+
 actor {
   include MixinObjectStorage();
 
