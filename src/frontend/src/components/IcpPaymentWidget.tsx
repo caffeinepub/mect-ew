@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { loadConfig } from "@caffeineai/core-infrastructure";
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
+import { createActor } from "../backend";
 import type { PaymentServiceType } from "../backend";
-import { useActor } from "../hooks/useActor";
 
 const ICP_ACCOUNT_ID =
   "f96703871a6cfcdfc4e920014a5e21d1f27e3b067817469bd0948b9d86a48e48";
@@ -12,8 +13,29 @@ interface Props {
   serviceType: PaymentServiceType;
 }
 
+// No-op file handlers — submitPaymentRecord only uses plain text params, no file blobs.
+const noopUpload = async (): Promise<Uint8Array> => new Uint8Array();
+const noopDownload = async (): Promise<never> => {
+  throw new Error("download not used");
+};
+
+function classifyError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const lower = msg.toLowerCase();
+  if (
+    lower.includes("ic0508") ||
+    (lower.includes("canister") && lower.includes("stop")) ||
+    lower.includes("reject code: 5") ||
+    lower.includes('reject_code":5') ||
+    lower.includes('reject_code": 5') ||
+    lower.includes("non_replicated_rejection")
+  ) {
+    return "El servicio está temporalmente no disponible. Intentá en unos minutos.";
+  }
+  return "Error al registrar el pago. Intentá de nuevo.";
+}
+
 export default function IcpPaymentWidget({ serviceType }: Props) {
-  const { actor } = useActor();
   const [copied, setCopied] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -44,13 +66,17 @@ export default function IcpPaymentWidget({ serviceType }: Props) {
       setError("Por favor completá todos los campos.");
       return;
     }
-    if (!actor) {
-      setError("Error de conexión. Intentá de nuevo.");
-      return;
-    }
     setError("");
     setSubmitting(true);
     try {
+      const config = await loadConfig();
+      const canisterId = config.backend_canister_id;
+
+      // Anonymous actor — no authentication required for visitors.
+      const actor = createActor(canisterId, noopUpload, noopDownload, {
+        agentOptions: { host: window.location.origin },
+      });
+
       await actor.submitPaymentRecord(
         form.name,
         form.email,
@@ -60,8 +86,9 @@ export default function IcpPaymentWidget({ serviceType }: Props) {
         serviceType,
       );
       setSubmitted(true);
-    } catch {
-      setError("Error al registrar el pago. Intentá de nuevo.");
+    } catch (err) {
+      console.error("[IcpPaymentWidget] submitPaymentRecord failed:", err);
+      setError(classifyError(err));
     } finally {
       setSubmitting(false);
     }
@@ -75,9 +102,9 @@ export default function IcpPaymentWidget({ serviceType }: Props) {
 
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          Los pagos pueden realizarse a través del token ICP desde cualquier
-          billetera compatible (NNS, Plug, Stoic u otras) o Exchange Crypto
-          (Kraken, Binance, Coinbase u otros)
+          Los pagos se realizan a través del token ICP desde cualquier billetera
+          compatible (NNS, Plug, Stoic u otras) o Exchange Crypto (Kraken,
+          Binance, Coinbase u otros)
         </p>
 
         <div className="space-y-1">
@@ -107,10 +134,10 @@ export default function IcpPaymentWidget({ serviceType }: Props) {
         <div className="text-sm text-muted-foreground space-y-1">
           <p className="font-semibold text-foreground">Pasos:</p>
           <ol className="list-decimal list-inside space-y-1 text-sm">
-            <li>Coordiná el monto y servicio por privado.</li>
-            <li>Realizá la transferencia ICP al Account ID indicado.</li>
+            <li>Coordine servicio y honorarios por privado.</li>
+            <li>Realice la transferencia ICP al Account ID indicado.</li>
             <li>
-              Completá el formulario de abajo con el hash de tu transacción.
+              Completé el formulario de abajo con el hash de su transferencia.
             </li>
           </ol>
         </div>

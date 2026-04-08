@@ -697,7 +697,7 @@ actor {
     sectionVisitCounter := 0;
   };
 
-  // ICP Payment functions
+  // ICP Payment functions — submitPaymentRecord is intentionally public (no caller check) to allow unauthenticated visitor submissions
   public shared ({ caller }) func submitPaymentRecord(
     name : Text,
     email : Text,

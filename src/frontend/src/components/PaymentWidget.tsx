@@ -19,6 +19,22 @@ const noopDownload = async (): Promise<never> => {
   throw new Error("download not used");
 };
 
+function classifyError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const lower = msg.toLowerCase();
+  if (
+    lower.includes("ic0508") ||
+    (lower.includes("canister") && lower.includes("stop")) ||
+    lower.includes("reject code: 5") ||
+    lower.includes('reject_code":5') ||
+    lower.includes('reject_code": 5') ||
+    lower.includes("non_replicated_rejection")
+  ) {
+    return "El servicio está temporalmente no disponible. Intentá en unos minutos.";
+  }
+  return "Error al registrar el pago. Intentá de nuevo.";
+}
+
 function SuccessState() {
   return (
     <div
@@ -89,8 +105,7 @@ export default function PaymentWidget({ serviceType }: Props) {
       setSubmitted(true);
     } catch (err) {
       console.error("[PaymentWidget] submitPaymentRecord failed:", err);
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(`Error al registrar el pago: ${msg}`);
+      setError(classifyError(err));
     } finally {
       setSubmitting(false);
     }
